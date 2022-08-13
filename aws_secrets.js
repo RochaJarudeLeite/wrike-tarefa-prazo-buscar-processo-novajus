@@ -15,6 +15,7 @@ const client = new SecretsManagerClient({
 async function getSecret(params) {
     try {
         const secret = await client.send(new GetSecretValueCommand(params));
+        console.log(secret);
         return JSON.parse(secret.SecretString)
     } catch (error) {
         return error

@@ -9,6 +9,7 @@ let params = {
 
 let secret = await getSecret(params);
 let legalOneKey = secret.THOMSON_REUTERS_TOKEN;
+console.log("LegalOneKey: " + legalOneKey);
 
 // check if ./tmp/LegalOneTokenInfo.json exists and if not create it
 let tokenInfo = {"ExpirationDate": ""};

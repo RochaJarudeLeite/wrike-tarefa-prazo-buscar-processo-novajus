@@ -77,6 +77,7 @@ export async function handler(event) {
 
     // get all cited
     let newDescriptionInfo = "</ul>";
+    
 
     wrikeTask.description = wrikeTask.description.replace(regexDescriptionInfo, `Identificadores dos processos relacionados, separados por vírgula<\/b><br \/>${newDescriptionInfo}<br \/>`);
     console.log(citedLitigations);

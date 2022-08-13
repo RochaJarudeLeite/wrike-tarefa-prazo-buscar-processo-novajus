@@ -4,9 +4,6 @@ const REGION = 'sa-east-1'
 //Set the Secrets Manager Service Object
 const secretsClient = new SecretsManagerClient({region: REGION})
 
-console.log(process.env.AWS_ACCESS_KEY_ID)
-console.log(process.env.AWS_SECRET_ACCESS_KEY)
-
 const client = new SecretsManagerClient({
     region: REGION,
     credentials: {

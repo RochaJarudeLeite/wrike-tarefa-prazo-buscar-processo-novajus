@@ -18,7 +18,8 @@ async function getSecret(params) {
         console.log(secret);
         return JSON.parse(secret.SecretString)
     } catch (error) {
-        return error
+        console.log(error);
+        throw error
     }
 }
 
@@ -30,7 +31,8 @@ async function setSecret(newValue) {
     try {
         const data = await client.send(new UpdateSecretCommand(params));
     } catch (error) {
-        return error
+        console.log(error);
+        throw error
     }
 }
 

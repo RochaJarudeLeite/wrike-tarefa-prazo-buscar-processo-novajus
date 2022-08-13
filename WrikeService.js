@@ -17,7 +17,7 @@ async function getTask(taskId) {
         const response = await fetch(url, config).then((response) => {
             return response
         })
-        if (response.status == 200) {
+        if (response.status === 200) {
             let body = await response.json();
             let data = body.data;
             if (data.length > 0) {
@@ -45,7 +45,7 @@ async function addTaksParents(taskId, parentId) {
         const response = await fetch(url, config).then((response) => {
             return response
         })
-        if (response.status == 200) {
+        if (response.status === 200) {
             let body = await response.json();
             let data = body.data;
             if (data.length > 0) {
@@ -68,12 +68,12 @@ async function updateTaskDescription(taskId, newDescription) {
             Authorization: 'Bearer ' + token
         }
     }
-    let url = `https://www.wrike.com/api/v4/tasks/${taskId}?description=["${newDescription}"]`
+    let url = `https://www.wrike.com/api/v4/tasks/${taskId}?description=${newDescription}`
     try {
         const response = await fetch(url, config).then((response) => {
             return response
         })
-        if (response.status == 200) {
+        if (response.status === 200) {
             let body = await response.json();
             let data = body.data;
             if (data.length > 0) {
@@ -99,7 +99,7 @@ async function updateFolderDescription(folderId, newDescription) {
         const response = await fetch(url, config).then((response) => {
             return response
         })
-        if (response.status == 200) {
+        if (response.status === 200) {
             let body = await response.json();
             let data = body.data;
             if (data.length > 0) {
@@ -117,7 +117,7 @@ async function updateFolderDescription(folderId, newDescription) {
 
 async function createTaskComment(taskId, comment, isPlainText = false) {
     let config = {
-        method: 'put',
+        method: 'post',
         headers: {
             Authorization: 'Bearer ' + token
         }
@@ -127,7 +127,7 @@ async function createTaskComment(taskId, comment, isPlainText = false) {
         const response = await fetch(url, config).then((response) => {
             return response
         })
-        if (response.status == 200) {
+        if (response.status === 200) {
             let body = await response.json();
             let data = body.data;
             if (data.length > 0) {
@@ -154,7 +154,7 @@ async function searchFolder(folderTitle) {
         const response = await fetch(url, config).then((response) => {
             return response
         })
-        if (response.status == 200) {
+        if (response.status === 200) {
             let body = await response.json();
             let data = body.data;
             if (data.length > 0) {
@@ -183,7 +183,7 @@ async function createFolder(folderTitle) {
         const response = await fetch(url, config).then((response) => {
             return response
         })
-        if (response.status == 200) {
+        if (response.status === 200) {
             let body = await response.json();
             let data = body.data;
             if (data.length > 0) {
@@ -206,7 +206,7 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
             if (response.success) {
                 folderId = response.id;
                 citedLitigation.folderId = folderId;
-                response = await addTaksParents(citedLitigation.taskId, folderId.id);
+                response = await addTaksParents(citedLitigation.taskId, folderId);
                 if (!response.success) {
                     citedLitigation.errors.push(`<li>Não foi possível incluir Incluir/Criar a pasta relacionada: ${response.message}</li>`)
                 }
@@ -222,15 +222,6 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
     } catch (error) {
         citedLitigation.errors.push(`<li>Não foi possível incluir Incluir/Criar a pasta relacionada: ${error}</li>`)
     }
-}
-
-async function appendError(citedLitigation, message) {
-    //push new item to citedLitigation.details, between tha last and penultimate
-    citedLitigation.htmlDescription.splice(
-        citedLitigation.htmlDescription.length - 1,
-        0,
-        `<div>Não foi possível incluir Incluir/Criar a pasta relacionada: ${message}</div>`
-    );
 }
 
 export {

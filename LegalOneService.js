@@ -44,7 +44,6 @@ async function getLitigationsByQuery(citedLitigation) {
                 return {success: false, content: `${query}: Pasta inválida?.`}
             }
             return {success: false, content: `${query}: CNJ inválido.`}
-            break
     }
 }
 
@@ -79,7 +78,7 @@ async function getLitigationsByCNJOrFolder(
             }
             return response
         })
-        if (response.status == 200) {
+        if (response.status === 200) {
             let body = await response.json()
             if (body.value.length > 0) {
                 let litigationData = []
@@ -131,8 +130,13 @@ async function getLitigationsByCNJOrFolder(
                 await Promise.resolve(results())
                 let methods = [];
                 methods.push(citedLitigation.htmlDescription = await createLitigationHTMLBlock(litigationData));
-                let folderTitle = filter == 'folder' ? value : litigationData.folder;
-                methods.push(await updateTaskParentFolder(citedLitigation, folderTitle))
+                let folderTitle = litigationData.length === 1 ? litigationData[0].folder : "";
+                if (folderTitle) {
+                    methods.push(await updateTaskParentFolder(citedLitigation, folderTitle))
+                } else {
+                    citedLitigation.comments.push(`Múltiplos processos encontrados. Inclua/crie as etiquetas de pastas manualmente.`)
+
+                }
                 results = async () => {
                     return Promise.all(methods)
                 }
@@ -144,7 +148,7 @@ async function getLitigationsByCNJOrFolder(
                 citedLitigation.htmlDescription.push(`<li><strong>❗ ${cl.litigation} - Não Encontrado.</strong></li>`)
                 return {success: false, content: 'Não encontrado.'}
             }
-        } else if (response.status == 401) {
+        } else if (response.status === 401) {
             if (retry < 3) {
                 return getLitigationsByCNJOrFolder(
                     value,
@@ -166,11 +170,7 @@ async function getLitigationsByCNJOrFolder(
     }
 }
 
-async function createLitigationHTMLBlock(
-    litigationData,
-    detailed = false,
-    shareBlock = true
-) {
+async function createLitigationHTMLBlock(litigationData) {
     let payload = [];
     let idx = 0;
     litigationData.forEach((litigation) => {
@@ -185,13 +185,13 @@ async function createLitigationHTMLBlock(
         }
         let clientePrincipal
         litigation.participants.forEach((p) => {
-            if (p.type == 'Customer' && p.main) {
+            if (p.type === 'Customer' && p.main) {
                 clientePrincipal = p.name
             }
         })
         let contrarioPrincipal
         litigation.participants.forEach((p) => {
-            if (p.type == 'OtherParty' && p.main) {
+            if (p.type === 'OtherParty' && p.main) {
                 contrarioPrincipal = p.name
             }
         })
@@ -236,7 +236,7 @@ async function getLawsuitParticipants(
             const results = async () => {
                 return Promise.all(
                     lawsuitParticipants.map(async (p) => {
-                        if (p.type == 'Customer' || p.type == 'OtherParty') {
+                        if (p.type === 'Customer' || p.type === 'OtherParty') {
                             const response = await fetch(
                                 `https://api.thomsonreuters.com/legalone/v1/api/rest/contacts/${p.contactId}`,
                                 config

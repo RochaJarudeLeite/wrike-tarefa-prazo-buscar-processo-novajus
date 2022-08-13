@@ -36,6 +36,7 @@ export async function handler(event) {
             isValid: true,
             taskId: taskId,
             errors: [],
+            comments: [],
             folderId: ""
         }
         if (litigation.groups.cnj != null) {
@@ -47,6 +48,7 @@ export async function handler(event) {
             } catch (error) {
                 cl.isValid = false;
                 cl.htmlDescription.push(`<li><strong>❗ ${cl.litigation} - CNJ inválido.</strong></li>`);
+                cl.comments.push(`<li>❗ ${cl.litigation} - CNJ inválido.</li>`);
             }
         } else if (litigation.groups.folder != null) {
             cl.litigation = litigation.groups.folder;
@@ -58,7 +60,7 @@ export async function handler(event) {
     response = await LO.batchGetLitigationsByQuery(validCitedLitigations);
     // replace citedLitigations with the same citedLitigaiton.litigation on validCitedLitigations
     citedLitigations = citedLitigations.map(cl => {
-        let validCl = validCitedLitigations.find(validCl => validCl.litigation == cl.litigation);
+        let validCl = validCitedLitigations.find(validCl => validCl.litigation === cl.litigation);
         if (validCl != null) {
             return validCl;
         } else {
@@ -67,43 +69,51 @@ export async function handler(event) {
     });
     //Update citedLitigation folder description
     let methods = citedLitigations.map(cl => {
-        if (cl.folderId != "") {
+        if (cl.folderId !== "") {
             let folderDescription = cl.htmlDescription.join("");
             return Wrike.updateFolderDescription(cl.folderId, folderDescription);
         }
     });
-    let responses = await Promise.all(methods);
 
 
-    // get all cited
-    let newDescriptionInfo = "</ul>";
-    
+    let newDescriptionInfo = "";
+    // for each citedLitigation, get the htmlDescription and add it to the newDescriptionInfo
+    for (const citedLitigation of citedLitigations) {
+        newDescriptionInfo += citedLitigation.htmlDescription.join("");
+    }
 
-    wrikeTask.description = wrikeTask.description.replace(regexDescriptionInfo, `Identificadores dos processos relacionados, separados por vírgula<\/b><br \/>${newDescriptionInfo}<br \/>`);
+    let newComment = "";
+    // for each citedLitigation, get the comment and add it to the newDescriptionInfo
+    for (const citedLitigation of citedLitigations) {
+        if (citedLitigation.comments.length > 0 && citedLitigation.errors.length > 0) {
+            newComment += `<h5>${citedLitigation.litigation}</h5>`;
+        }
+        if (citedLitigation.comments.length > 0) {
+            newComment += `<p>Detalhes</p>`;
+            for (const comment of citedLitigation.comments) {
+                newComment += `<li>${citedLitigation.comments.join("")}</li>`;
+            }
+        }
+        if (citedLitigation.errors.length > 0) {
+            newComment += `<p>Erros</p>`;
+            for (const error of citedLitigation.errors) {
+                newComment += `<li>${citedLitigation.errors.join("")}</li>`;
+            }
+        }
+    }
+
+    //Create task comment
+    if (newComment !== "") {
+        methods.push(Wrike.createTaskComment(taskId, newComment, false));
+    }
+
     console.log(citedLitigations);
-
-
-    // const results = async () => {
-    //     return Promise.all(
-    //         litigationData.map(async (litigation) => {
-    //             litigation.participants = litigation.participants
-    //                 ? (litigation.participants = await getLawsuitParticipants(
-    //                     litigation.participants,
-    //                     token
-    //                 ))
-    //                 : []
-    //         })
-    //     )
-    // }
-    // await Promise.resolve(results())
-    // return {
-    //     success: true,
-    //     content: await createLitigationHTMLBlock(litigationData)
-    // }
-    // } else {
-    //     return {success: false, content: 'Não encontrado.'}
-    // }
-
+    let newTaskDescription = wrikeTask.description.replace(regexDescriptionInfo, `Processos Relacionados<\/b><br \/>${newDescriptionInfo}<br \/>`);
+    methods.push(Wrike.updateTaskDescription(taskId, newTaskDescription));
+    response = await Promise.all(methods);
+    if (!response.success) {
+        console.log(response.message);
+    }
 
     response = {
         statusCode: 200,

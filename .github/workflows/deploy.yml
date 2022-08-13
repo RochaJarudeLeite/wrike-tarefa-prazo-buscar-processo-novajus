@@ -13,7 +13,7 @@ jobs:
         run: sudo apt-get update
       - uses: actions/setup-node@v2 # --> To Setup the Server With Node Env
         with:
-          node-ver  sion: '14' #--> Specify the Version of the Nod
+          node-version: '16' #--> Specify the Version of the Nod
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1 #--> Setup the Credential for the AWS cli
         with:

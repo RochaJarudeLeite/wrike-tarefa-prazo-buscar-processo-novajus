@@ -26,7 +26,7 @@ async function getTask(taskId) {
                 return {"success": true, "wrikeTask": null};
             }
         } else {
-            return {"success": false, "message": "Erro ao obter dados."};
+            return {"success": false, "message": "Erro ao obter dados da tarefa."};
         }
     } catch (error) {
         return {"success": false, "message": "Erro: " + error};
@@ -51,10 +51,10 @@ async function addTaksParents(taskId, parentId) {
             if (data.length > 0) {
                 return {"success": true};
             } else {
-                return {"success": false, "message": "Erro ao obter dados."};
+                return {"success": false, "message": "Erro ao obter dados da pasta."};
             }
         } else {
-            return {"success": false, "message": "Erro ao obter dados."};
+            return {"success": false, "message": "Erro ao obter dados da pasta."};
         }
     } catch (error) {
         return {"success": false, "message": "Erro: " + error};

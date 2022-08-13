@@ -2,13 +2,21 @@ import * as LO from './LegalOneService.js';
 import * as Wrike from './WrikeService.js';
 import * as v from 'validate-cnj'
 
-const regexDescriptionInfo = /Identificadores dos processos relacionados, separados por vírgula<\/b><br ?\/>(?<litigations>.*?)<br ?\/>/;
+const regexDescriptionInfo = /Identificadores dos processos relacionados, separados por vírgula<\/b><br ?\/>(?<litigations>.*?)/;
 const regexLitigations = /(?<cnj>\d{7}-\d{2}.\d{4}.\d.\d{2}.\d{4}|.*?\d{20})|(?<folder>Proc-\d{7}\/\d+|Proc-\d{7})/g;
 
 export async function handler(event) {
     let sns = event.Records[0].Sns;
     let message = sns.Message;
     let messageJson = JSON.parse(message);
+    console.log(messageJson);
+    if (messageJson.eventType === 'TaskCreated') {
+        response = {
+            statusCode: 200,
+            body: JSON.stringify('Skiped'),
+        };
+        return response;
+    }
     let taskId = messageJson[0].taskId;
     let response = await Wrike.getTask(taskId);
     if (response.success) {
@@ -21,7 +29,15 @@ export async function handler(event) {
         }
     }
     let wrikeTask = response.wrikeTask;
-    const relatedLitigations = regexDescriptionInfo.exec(wrikeTask.description).groups.litigations;
+    let matches = regexDescriptionInfo.exec(wrikeTask.description);
+    if (matches == null) {
+        response = {
+            statusCode: 200,
+            body: JSON.stringify('Skiped'),
+        };
+        return response;
+    }
+    const relatedLitigations = matches.groups.litigations;
     if (relatedLitigations == null) {
         console.log("Não há processos relacionados.");
         return;
@@ -108,7 +124,7 @@ export async function handler(event) {
     }
 
     console.log(citedLitigations);
-    let newTaskDescription = wrikeTask.description.replace(regexDescriptionInfo, `Processos Relacionados<\/b><br \/>${newDescriptionInfo}<br \/>`);
+    let newTaskDescription = wrikeTask.description.replace(regexDescriptionInfo, `Processos Relacionados<\/b><br \/>${newDescriptionInfo}`);
     methods.push(Wrike.updateTaskDescription(taskId, newTaskDescription));
     response = await Promise.all(methods);
     if (!response.success) {
@@ -117,8 +133,7 @@ export async function handler(event) {
 
     response = {
         statusCode: 200,
-        body: JSON.stringify('Redirected'),
+        body: JSON.stringify('Done'),
     };
-    console.log(event)
     return response;
 }

@@ -13,7 +13,7 @@ try {
     tokenInfo = JSON.parse(fs.readFileSync('tmp/LegalOneTokenInfo.json'))
 } catch (err) {
     console.log("Checking for tokenInfo file on S3")
-    S3.downloadFileS3('LegalOneTokenInfo.json').then((result) => {
+    await S3.downloadFileS3('LegalOneTokenInfo.json').then((result) => {
         if (result) {
             tokenInfo = JSON.parse(fs.readFileSync('tmp/LegalOneTokenInfo.json'))
         }

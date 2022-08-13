@@ -1,7 +1,6 @@
 import * as AWS from "@aws-sdk/client-s3";
-import {PutObjectCommand} from "@aws-sdk/client-s3";
+import {GetObjectCommand, PutObjectCommand} from "@aws-sdk/client-s3";
 import fs from 'fs';
-import axios from 'axios';
 
 
 const s3 = new AWS.S3({
@@ -37,28 +36,24 @@ async function downloadFileS3(fileName) {
         Bucket: s3Bucket,
         Key: fileName
     }
+    const streamToString = (stream) =>
+        new Promise((resolve, reject) => {
+            const chunks = [];
+            stream.on("data", (chunk) => chunks.push(chunk));
+            stream.on("error", reject);
+            stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+        });
+
     let s3Object
     try {
-        s3Object = await s3.getObject(params);
-    } catch (NoSuchKey) {
+        s3Object = await s3.send(new GetObjectCommand(params));
+        const bodyContents = await streamToString(s3Object.Body);
+        console.log(bodyContents);
+        fs.writeFileSync("tmp/" + fileName, bodyContents);
+        return s3Object.LastModified
+    } catch (e) {
         return false
     }
-
-    params.Expires = 3000
-
-    const url = await s3.getSignedUrlPromise('getObject', params).catch((err) => {
-        console.log(err)
-    })
-    const res = await axios.get(url, {
-        responseType: 'stream'
-    })
-    const istream = res.data
-    const ostream = fs.createWriteStream("tmp/" + fileName)
-    istream.pipe(ostream)
-    ostream.on('finish', () => {
-        console.log('file download finished')
-    })
-    return s3Object.LastModified
 }
 
 export {

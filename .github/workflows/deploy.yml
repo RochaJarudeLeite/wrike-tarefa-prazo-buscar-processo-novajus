@@ -32,11 +32,6 @@ jobs:
           files: .
           recursive: true
           dest: lambda.zip
-      - name: AWS Lambda Deploy
-        uses: appleboy/lambda-action@master
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: ${{ secrets.AWS_REGION }}
-          function_name: wrike-tarefa-prazo-buscar-processo-novajus
-          zip_file: lambda.zip
+      - name: deploy
+        run: |
+          aws lambda update-function-code --function-name=wrike-tarefa-prazo-buscar-processo-novajus --zip-file=fileb://lambda.zip

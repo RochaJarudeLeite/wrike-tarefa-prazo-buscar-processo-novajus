@@ -7,6 +7,9 @@ let params = {
     SecretId: 'prod/LegalOne'
 }
 
+let secret = await getSecret(params);
+let legalOneKey = secret.THOMSON_REUTERS_TOKEN;
+
 // check if ./tmp/LegalOneTokenInfo.json exists and if not create it
 let tokenInfo = {"ExpirationDate": ""};
 try {
@@ -45,12 +48,12 @@ async function getToken(forced = false) {
         dt.setSeconds(dt.getSeconds() + parseInt(body.expires_in))
         tokenInfo.ExpirationDate = dt
         fs.writeFileSync('tmp/LegalOneTokenInfo.json', JSON.stringify(tokenInfo))
-        await S3.uploadFileS3('LegalOneTokenInfo.json');
+        await S3.uploadFileS3('tmp/LegalOneTokenInfo.json');
+        legalOneKey = body.access_token;
         setSecret(body.access_token)
         return body.access_token
     } else {
-        let secretString = await getSecret(params)
-        return secretString.THOMSON_REUTERS_TOKEN
+        return legalOneKey;
     }
 }
 

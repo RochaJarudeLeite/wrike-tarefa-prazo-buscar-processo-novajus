@@ -1,12 +1,12 @@
 import {getSecret} from './aws_secrets.js';
 
-var params = {
+let params = {
     SecretId: 'prod/wrike'
 }
 
 async function GetToken(forced = false) {
-    var secretString = await getSecret(params)
-    var token = secretString.wrikeKey
+    let secretString = await getSecret(params)
+    let token = secretString.wrikeKey
     return token
 }
 

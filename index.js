@@ -2,7 +2,7 @@ import * as LO from './LegalOneService.js';
 import * as Wrike from './WrikeService.js';
 import * as v from 'validate-cnj'
 
-const regexDescriptionInfo = /Identificadores dos processos relacionados, separados por vírgula<\/b><br ?\/>(?<litigations>.*?)/;
+const regexDescriptionInfo = /Identificadores dos processos relacionados, separados por vírgula<\/b><br ?\/>(?<litigations>.*?)<br ?\/>/;
 const regexLitigations = /(?<cnj>\d{7}-\d{2}.\d{4}.\d.\d{2}.\d{4}|.*?\d{20})|(?<folder>Proc-\d{7}\/\d+|Proc-\d{7})/g;
 
 export async function handler(event) {
@@ -19,8 +19,7 @@ export async function handler(event) {
     }
     let taskId = messageJson[0].taskId;
     let response = await Wrike.getTask(taskId);
-    if (response.success) {
-    } else {
+    if (!response.success) {
         console.log(response.message);
         let comment = `Não foi possível obter os dados da tarefa para rodar a automação de processos relacionados. Erro: ${response.message}`;
         response = await Wrike.createTaskComment(taskId, comment, true);
@@ -124,7 +123,7 @@ export async function handler(event) {
     }
 
     console.log(citedLitigations);
-    let newTaskDescription = wrikeTask.description.replace(regexDescriptionInfo, `Processos Relacionados<\/b><br \/>${newDescriptionInfo}`);
+    let newTaskDescription = wrikeTask.description.replace(regexDescriptionInfo, `Processos Relacionados<\/b><br \/>${newDescriptionInfo}<\/b><br \/>`);
     methods.push(Wrike.updateTaskDescription(taskId, newTaskDescription));
     response = await Promise.all(methods);
     if (!response.success) {

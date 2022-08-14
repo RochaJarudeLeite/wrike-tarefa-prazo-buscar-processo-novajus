@@ -53,8 +53,8 @@ async function getToken(forced = false) {
         let dt = new Date(parseInt(body.issued_at))
         dt.setSeconds(dt.getSeconds() + parseInt(body.expires_in))
         tokenInfo.ExpirationDate = dt
-        fs.writeFileSync('.tmp' + tokenInfoFile, JSON.stringify(tokenInfo))
-        await S3.uploadFileS3('.tmp' + tokenInfoFile);
+        fs.writeFileSync('.tmp/' + tokenInfoFile, JSON.stringify(tokenInfo))
+        await S3.uploadFileS3('.tmp/' + tokenInfoFile);
         legalOneKey = body.access_token;
         await setSecret(body.access_token);
         console.log("Token updated.");

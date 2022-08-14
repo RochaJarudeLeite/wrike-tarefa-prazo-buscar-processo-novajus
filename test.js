@@ -1,8 +1,9 @@
-import {getLegalOneToken} from './LegalOneAuth.js'
+import fs from "fs";
+import * as index from "./index.js";
 
 
 // Test get Legal One Token
-let test = await getLegalOneToken()
+// let test = await getLegalOneToken()
 
 // Test Get Lawsuit By CNJ
 // let payload = await LO.getLitigationsByQuery("2125610-46.2020.8.26.0000")
@@ -26,7 +27,7 @@ let test = await getLegalOneToken()
 // read from json file
 
 
-// let file = fs.readFileSync('SNS_Payload.json', 'utf8');
-// let event = JSON.parse(file);
-// await index.handler(event);
+let file = fs.readFileSync('SNS_Payload.json', 'utf8');
+let event = JSON.parse(file);
+await index.handler(event);
 

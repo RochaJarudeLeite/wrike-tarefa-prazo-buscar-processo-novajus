@@ -1,4 +1,5 @@
 import * as LO from './LegalOneService.js';
+import {GetLegalOneTokenExpirationDate} from './LegalOneAuth.js'
 import * as Wrike from './WrikeService.js';
 import * as v from 'validate-cnj'
 
@@ -6,8 +7,7 @@ const regexDescriptionInfo = /Processos Relacionados<\/b><br ?\/>(?<litigations>
 const regexLitigations = /(?<cnj>\d{7}-\d{2}.\d{4}.\d.\d{2}.\d{4}|.*?\d{20})|(?<folder>Proc-\d{7}\/\d+|Proc-\d{7})/g;
 
 export async function handler(event) {
-
-
+    let LOTokenMethod = GetLegalOneTokenExpirationDate();
     let sns = event.Records[0].Sns;
     let message = sns.Message;
     let messageJson = JSON.parse(message);
@@ -74,6 +74,7 @@ export async function handler(event) {
         citedLitigations.push(cl);
     }
     let validCitedLitigations = citedLitigations.filter(cl => cl.isValid);
+    await Promise.resolve(LOTokenMethod);
     response = await LO.batchGetLitigationsByQuery(validCitedLitigations);
     // replace citedLitigations with the same citedLitigaiton.litigation on validCitedLitigations
     citedLitigations = citedLitigations.map(cl => {

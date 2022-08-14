@@ -73,4 +73,7 @@ async function getToken(forced = false) {
     return legalOneKey;
 }
 
-export {getToken as getLegalOneToken}
+export {
+    getToken as getLegalOneToken,
+    GetTokenExpirationDate as GetLegalOneTokenExpirationDate
+}

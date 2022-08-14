@@ -83,5 +83,3 @@ export {
     getToken as getLegalOneToken,
     GetTokenExpirationDateAndSecret as GetLegalOneTokenExpirationDate
 }
-
-export {getToken as getLegalOneToken}

@@ -16,7 +16,7 @@ async function GetTokenExpirationDateAndSecret() {
         SecretId: 'prod/LegalOne'
     }
     console.log("Getting LegalOne Key from Secrets Manager")
-    let secretResponse = getSecret(secretParams);
+    let secretResponse = await getSecret(secretParams);
     try {
         console.log("Reading Token info from /tmp/LegalOneTokenInfo.json")
         let localFile = fs.readFileSync(tempFolder + tokenInfoFile);

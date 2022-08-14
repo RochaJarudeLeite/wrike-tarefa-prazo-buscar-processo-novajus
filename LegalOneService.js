@@ -129,16 +129,16 @@ async function getLitigationsByCNJOrFolder(
                 }
                 await Promise.resolve(results())
                 let methods = [];
-                methods.push(citedLitigation.htmlDescription = await createLitigationHTMLBlock(litigationData));
+                citedLitigation.htmlDescription = await createLitigationHTMLBlock(litigationData);
                 let folderTitle = litigationData.length === 1 ? litigationData[0].folder : null;
                 if (folderTitle != null) {
                     methods.push(await updateTaskParentFolder(citedLitigation, folderTitle))
                 } else {
                     citedLitigation.comments.push(`Múltiplos processos encontrados. Inclua/crie as etiquetas de pastas manualmente.`)
-
                 }
-                results = async () => {
-                    return Promise.all(methods)
+                let response = await Promise.all(methods);
+                if (!response.success) {
+                    console.log(response.message);
                 }
                 return {
                     success: true,
@@ -183,12 +183,14 @@ async function createLitigationHTMLBlock(litigationData) {
         } else {
             header = `${litigation.folder}`
         }
+
         let clientePrincipal
         litigation.participants.forEach((p) => {
             if (p.type === 'Customer' && p.main) {
                 clientePrincipal = p.name
             }
         })
+
         let contrarioPrincipal
         litigation.participants.forEach((p) => {
             if (p.type === 'OtherParty' && p.main) {
@@ -197,7 +199,7 @@ async function createLitigationHTMLBlock(litigationData) {
         })
 
         //add header
-        payload.push(`<li style="margin-bottom: 10px" id="item-${idx}"><h3>${header}</h3>`);
+        payload.push(`<li style="margin-bottom: 10px" id="item-${idx}"><strong>${header}</strong>`);
         payload.push(`<div style="margin-left: 10px">`);
         //add Main Info
         payload.push(`<div><strong>Tipo: </strong>${esferaTypes[litigation.type]}/${litigationTypes[litigation.litigationType]} / <strong>Título: </strong>${litigation.title}</div>`)

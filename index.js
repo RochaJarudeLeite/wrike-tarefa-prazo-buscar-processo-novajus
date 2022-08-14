@@ -22,7 +22,6 @@ export async function handler(event) {
     let taskId = messageJson[0].taskId;
     let response = await Wrike.getTask(taskId);
     if (!response.success) {
-        console.log(response.message);
         let comment = `Não foi possível obter os dados da tarefa para rodar a automação de processos relacionados. Erro: ${response.message}`;
         response = await Wrike.createTaskComment(taskId, comment, true);
         if (!response.success) {
@@ -89,7 +88,7 @@ export async function handler(event) {
     let methods = citedLitigations.map(cl => {
         if (cl.folderId !== null) {
             let folderDescription = cl.htmlDescription.join("");
-            return Wrike.updateFolderDescription(cl.folderId, folderDescription);
+            return Wrike.updateFolderDescription(cl, folderDescription);
         }
     });
 
@@ -124,8 +123,6 @@ export async function handler(event) {
     if (newComment !== "") {
         methods.push(Wrike.createTaskComment(taskId, newComment, false));
     }
-
-    console.log(citedLitigations);
     let newTaskDescription = wrikeTask.description.replace(regexDescriptionInfo, `Processos Relacionados<\/b><br \/><ul>${newDescriptionInfo}<\/ul>`);
     methods.push(Wrike.updateTaskDescription(taskId, newTaskDescription));
     response = await Promise.all(methods);

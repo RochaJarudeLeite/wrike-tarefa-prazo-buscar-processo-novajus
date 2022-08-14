@@ -90,14 +90,49 @@ async function updateTaskDescription(taskId, newDescription) {
     }
 }
 
-async function updateFolderDescription(folderId, newDescription) {
+async function updateFolderDescription(citedLitigation, newDescription) {
+    let folderId = citedLitigation.folderId;
     let config = {
         method: 'put',
         headers: {
             Authorization: 'Bearer ' + token
         }
     }
-    let url = `https://www.wrike.com/api/v4/folders/${folderId}?description=${newDescription}&restore=true`
+    let url = `https://www.wrike.com/api/v4/folders/${folderId}?description=${newDescription}`
+    try {
+        const response = await fetch(url, config).then((response) => {
+            return response
+        })
+        if (response.status === 200) {
+            let body = await response.json();
+            let data = body.data;
+            if (data.length > 0) {
+                if (data[0].scope === "RbFolder") {
+                    await (citedLitigation);
+                }
+                return {"success": true};
+            }
+        } else {
+            let message = `Erro ao atualizar a descrição da pasta ${folderId}.`;
+            citedLitigation.errors.push(`<li>${message}</li>`);
+            return {"success": false, "message": message};
+        }
+    } catch (error) {
+        let message = `Erro ao atualizar a descrição da pasta ${folderId}`;
+        citedLitigation.errors.push(`<li>${message}</li>`);
+        return {"success": false, "message": `${message}: ${error}`};
+    }
+}
+
+async function restoreIfDeletedFolder(citedLitigation) {
+    let folderId = citedLitigation.folderId;
+    let config = {
+        method: 'put',
+        headers: {
+            Authorization: 'Bearer ' + token
+        }
+    }
+    let url = `https://www.wrike.com/api/v4/folders/${folderId}?restore=true`
     try {
         const response = await fetch(url, config).then((response) => {
             return response
@@ -109,11 +144,41 @@ async function updateFolderDescription(folderId, newDescription) {
                 return {"success": true};
             }
         } else {
-            let message = `Erro ao atualizar a descrição da pasta ${folderId}.`;
+            let message = `Erro ao restaurar a pasta ${folderId}.`;
+            citedLitigation.errors.push(`<li>${message}</li>`);
             return {"success": false, "message": message};
         }
     } catch (error) {
-        let message = `Erro ao atualizar a descrição da pasta ${folderId}`;
+        let message = `Erro ao restaurar a pasta ${folderId}`;
+        citedLitigation.errors.push(`<li>${message}</li>`);
+        return {"success": false, "message": `${message}: ${error}`};
+    }
+}
+
+async function GetFolder(folderId) {
+    let config = {
+        method: 'get',
+        headers: {
+            Authorization: 'Bearer ' + token
+        }
+    }
+    let url = `https://www.wrike.com/api/v4/folders/${folderId}`
+    try {
+        const response = await fetch(url, config).then((response) => {
+            return response
+        })
+        if (response.status === 200) {
+            let body = await response.json();
+            let data = body.data;
+            if (data.length > 0) {
+                return {"success": true, "data": data[0]};
+            }
+        } else {
+            let message = `Erro ao obter os dados da pasta ${folderId}.`;
+            return {"success": false, "message": message};
+        }
+    } catch (error) {
+        let message = `Erro ao obter os dados da pasta ${folderId}.`;
         return {"success": false, "message": `${message}: ${error}`};
     }
 }
@@ -217,7 +282,7 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
         } else if (response.success && response.id != null) {
             folderId = response.id;
             citedLitigation.folderId = folderId;
-            response = await addTaksParents(citedLitigation.taskId, folderId);
+            response = await addTaksParents(citedLitigation, folderId);
             if (!response.success) {
                 citedLitigation.errors.push(`<li>Não foi possível Incluir/Criar a pasta relacionada: ${response.message}</li>`)
             }
@@ -234,5 +299,6 @@ export {
     updateTaskDescription,
     createTaskComment,
     updateTaskParentFolder,
-    updateFolderDescription
+    updateFolderDescription,
+    restoreIfDeletedFolder
 }

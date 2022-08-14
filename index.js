@@ -126,7 +126,7 @@ export async function handler(event) {
     }
 
     console.log(citedLitigations);
-    let newTaskDescription = wrikeTask.description.replace(regexDescriptionInfo, `Processos Relacionados<\/b><br \/><ul>${newDescriptionInfo}<\/ul><\/b>`);
+    let newTaskDescription = wrikeTask.description.replace(regexDescriptionInfo, `Processos Relacionados<\/b><br \/><ul>${newDescriptionInfo}<\/ul>`);
     methods.push(Wrike.updateTaskDescription(taskId, newTaskDescription));
     response = await Promise.all(methods);
     if (!response.success) {

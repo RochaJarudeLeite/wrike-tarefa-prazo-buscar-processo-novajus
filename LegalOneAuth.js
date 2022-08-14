@@ -7,37 +7,42 @@ let params = {
     SecretId: 'prod/LegalOne'
 }
 
+let tokenInfoFile = 'LegalOneTokenInfo.json'
+
 let secret = await getSecret(params);
 let legalOneKey = secret.THOMSON_REUTERS_TOKEN;
-console.log("LegalOneKey: " + legalOneKey);
 
-// check if ./tmp/LegalOneTokenInfo.json exists and if not create it
+// check if ./tmp/LegalOneTokenInfo.json exists and if not download it
 let tokenInfo = {"ExpirationDate": ""};
 try {
-    tokenInfo = JSON.parse(fs.readFileSync('tmp/LegalOneTokenInfo.json'))
+    console.log("Reading Token info from tmp/LegalOneTokenInfo.json")
+    tokenInfo = JSON.parse(fs.readFileSync('tmp/' + tokenInfoFile))
+    console.log("Token info: " + JSON.stringify(tokenInfo))
 } catch (err) {
-    console.log("Checking for tokenInfo file on S3")
-    await S3.downloadFileS3('LegalOneTokenInfo.json').then((result) => {
+    console.log("Couldn't read. Downloading file on S3")
+    await S3.downloadFileS3(tokenInfoFile).then((result) => {
         if (result) {
-            tokenInfo = JSON.parse(fs.readFileSync('tmp/LegalOneTokenInfo.json'))
+            tokenInfo = result.content;
+            console.log("Token info: " + JSON.stringify(tokenInfo))
         }
     }).catch((err) => {
         console.log(err)
-    }).finally(() => {
-        console.log("Finished checking for tokenInfo file on S3")
     });
 }
 
 async function getToken(forced = false) {
+    console.log("Checking LegalOne token. Forced: " + forced + "; Expiration Date: " + tokenInfo.ExpirationDate)
     let tokenExpired = true;
-    if (!forced && tokenInfo.ExpirationDate !== "") {
+    if (tokenInfo.ExpirationDate !== "") {
+        console.log("Checking expiration date")
         let tokenDate = new Date(tokenInfo.ExpirationDate)
         if (tokenDate !== "") {
             tokenExpired = tokenDate < Date.now()
         }
     }
     //check expiration
-    if (tokenExpired) {
+    if (forced || tokenExpired) {
+        console.info(`Getting new token. Forced: ${forced}; Token expired: ${tokenExpired}`)
         let config = {
             method: 'get', headers: {
                 'Authorization': 'Basic ' + process.env.THOMSON_REUTERS_AUTH
@@ -51,11 +56,12 @@ async function getToken(forced = false) {
         fs.writeFileSync('tmp/LegalOneTokenInfo.json', JSON.stringify(tokenInfo))
         await S3.uploadFileS3('tmp/LegalOneTokenInfo.json');
         legalOneKey = body.access_token;
-        setSecret(body.access_token)
-        return body.access_token
+        await setSecret(body.access_token);
+        console.log("Token updated.");
     } else {
-        return legalOneKey;
+        console.info("Token still valid. Using existing token")
     }
+    return legalOneKey;
 }
 
 export {getToken as getLegalOneToken}

@@ -48,9 +48,8 @@ async function downloadFileS3(fileName) {
     try {
         s3Object = await s3.send(new GetObjectCommand(params));
         const bodyContents = await streamToString(s3Object.Body);
-        console.log(bodyContents);
         fs.writeFileSync("tmp/" + fileName, bodyContents);
-        return s3Object.LastModified
+        return {"content": bodyContents, "lastModified": s3Object.LastModified}
     } catch (e) {
         return false
     }

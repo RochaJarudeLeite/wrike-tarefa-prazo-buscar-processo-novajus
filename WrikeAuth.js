@@ -7,7 +7,6 @@ let params = {
 async function GetToken(forced = false) {
     let secretString = await getSecret(params)
     let token = secretString.wrikeKey
-    console.log("WrikeKey: " + token);
     return token
 }
 

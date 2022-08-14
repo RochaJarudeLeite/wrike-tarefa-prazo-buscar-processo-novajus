@@ -13,7 +13,9 @@ let legalOneKey;
 let tokenInfo;
 
 
-async function GetTokenExpirationDate() {
+async function GetTokenExpirationDateAndSecret() {
+    console.log("Getting LegalOne Key from Secrets Manager")
+    let secretResponse = getSecret(params);
     try {
         console.log("Reading Token info from /tmp/LegalOneTokenInfo.json")
         let localFile = fs.readFileSync(tempFolder + tokenInfoFile);
@@ -30,16 +32,15 @@ async function GetTokenExpirationDate() {
             console.log(err)
         });
     }
+    Promise.resolve(secretResponse).then((result) => {
+        if (result) {
+            legalOneKey = result.THOMSON_REUTERS_TOKEN;
+            console.log("LegalOne Key set");
+        }
+    });
 }
 
 async function getToken(forced = false) {
-    await GetTokenExpirationDate();
-    if (legalOneKey == null) {
-        console.log("Getting LegalOne Key from Secrets Manager")
-        let secret = await getSecret(params);
-        legalOneKey = secret.THOMSON_REUTERS_TOKEN;
-        console.log("LegalOne Key set");
-    }
     console.log("Checking LegalOne token. Forced: " + forced + "; Expiration Date: " + tokenInfo.ExpirationDate)
     let tokenExpired = true;
     if (tokenInfo.ExpirationDate !== "") {
@@ -75,5 +76,5 @@ async function getToken(forced = false) {
 
 export {
     getToken as getLegalOneToken,
-    GetTokenExpirationDate as GetLegalOneTokenExpirationDate
+    GetTokenExpirationDateAndSecret as GetLegalOneTokenExpirationDate
 }

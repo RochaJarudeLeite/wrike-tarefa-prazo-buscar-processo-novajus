@@ -6,31 +6,39 @@ import * as S3 from './s3.js'
 let params = {
     SecretId: 'prod/LegalOne'
 }
-
+const tempFolder = process.env.TEMP_FOLDER;
 let tokenInfoFile = 'LegalOneTokenInfo.json'
+let legalOneKey;
+let tokenInfo;
 
-let secret = await getSecret(params);
-let legalOneKey = secret.THOMSON_REUTERS_TOKEN;
 
-// check if .tmp/LegalOneTokenInfo.json exists and if not download it
-let tokenInfo = {"ExpirationDate": ""};
-try {
-    console.log("Reading Token info from .tmp/LegalOneTokenInfo.json")
-    tokenInfo = JSON.parse(fs.readFileSync('.tmp/' + tokenInfoFile))
-    console.log("Token info: " + JSON.stringify(tokenInfo))
-} catch (err) {
-    console.log("Couldn't read. Downloading file on S3")
-    await S3.downloadFileS3(tokenInfoFile).then((result) => {
-        if (result) {
-            tokenInfo = result.content;
-            console.log("Token info: " + JSON.stringify(tokenInfo))
-        }
-    }).catch((err) => {
-        console.log(err)
-    });
+async function GetTokenExpirationDate() {
+    try {
+        console.log("Reading Token info from /tmp/LegalOneTokenInfo.json")
+        let localFile = fs.readFileSync(tempFolder + tokenInfoFile);
+        tokenInfo = JSON.parse(localFile)
+        console.log("Token info: " + JSON.stringify(tokenInfo))
+    } catch (err) {
+        console.log("Couldn't read. Downloading file on S3")
+        await S3.downloadFileS3(tokenInfoFile, tempFolder).then((result) => {
+            if (result) {
+                tokenInfo = JSON.parse(result.content);
+                console.log("Token info: " + JSON.stringify(tokenInfo))
+            }
+        }).catch((err) => {
+            console.log(err)
+        });
+    }
 }
 
 async function getToken(forced = false) {
+    await GetTokenExpirationDate();
+    if (legalOneKey == null) {
+        console.log("Getting LegalOne Key from Secrets Manager")
+        let secret = await getSecret(params);
+        legalOneKey = secret.THOMSON_REUTERS_TOKEN;
+        console.log("LegalOne Key set");
+    }
     console.log("Checking LegalOne token. Forced: " + forced + "; Expiration Date: " + tokenInfo.ExpirationDate)
     let tokenExpired = true;
     if (tokenInfo.ExpirationDate !== "") {
@@ -53,8 +61,8 @@ async function getToken(forced = false) {
         let dt = new Date(parseInt(body.issued_at))
         dt.setSeconds(dt.getSeconds() + parseInt(body.expires_in))
         tokenInfo.ExpirationDate = dt
-        fs.writeFileSync('.tmp/' + tokenInfoFile, JSON.stringify(tokenInfo))
-        await S3.uploadFileS3('.tmp/' + tokenInfoFile);
+        fs.writeFileSync(tempFolder + tokenInfoFile, JSON.stringify(tokenInfo))
+        await S3.uploadFileS3(tempFolder + tokenInfoFile);
         legalOneKey = body.access_token;
         await setSecret(body.access_token);
         console.log("Token updated.");

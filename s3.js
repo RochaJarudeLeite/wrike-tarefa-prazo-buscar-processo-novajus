@@ -31,7 +31,7 @@ async function uploadFileS3(fileName) {
     }
 }
 
-async function downloadFileS3(fileName) {
+async function downloadFileS3(fileName, saveTo) {
     let params = {
         Bucket: s3Bucket,
         Key: fileName
@@ -48,7 +48,7 @@ async function downloadFileS3(fileName) {
     try {
         s3Object = await s3.send(new GetObjectCommand(params));
         const bodyContents = await streamToString(s3Object.Body);
-        fs.writeFileSync(".tmp/" + fileName, bodyContents);
+        fs.writeFileSync(saveTo + fileName, bodyContents);
         return {"content": bodyContents, "lastModified": s3Object.LastModified}
     } catch (e) {
         return false

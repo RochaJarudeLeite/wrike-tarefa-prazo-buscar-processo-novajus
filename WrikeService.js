@@ -33,7 +33,8 @@ async function getTask(taskId) {
     }
 }
 
-async function addTaksParents(taskId, parentId) {
+async function addTaksParents(citedLitigation, parentId) {
+    let taskId = citedLitigation.taskId;
     let config = {
         method: 'put',
         headers: {
@@ -51,10 +52,12 @@ async function addTaksParents(taskId, parentId) {
             if (data.length > 0) {
                 return {"success": true};
             } else {
-                return {"success": false, "message": "Erro ao obter dados da pasta."};
+                citedLitigation.errors.push("Erro ao adicionar tarefa pai.");
+                return {"success": false, "message": "Erro ao adicionar etiqueta na pasta."};
             }
         } else {
-            return {"success": false, "message": "Erro ao obter dados da pasta."};
+            citedLitigation.errors.push("Erro ao adicionar tarefa pai.");
+            return {"success": false, "message": "Erro ao adicionar etiqueta na pasta."};
         }
     } catch (error) {
         return {"success": false, "message": "Erro: " + error};
@@ -94,7 +97,7 @@ async function updateFolderDescription(folderId, newDescription) {
             Authorization: 'Bearer ' + token
         }
     }
-    let url = `https://www.wrike.com/api/v4/folders/${folderId}?description=${newDescription}`
+    let url = `https://www.wrike.com/api/v4/folders/${folderId}?description=${newDescription}&restore=true`
     try {
         const response = await fetch(url, config).then((response) => {
             return response
@@ -206,9 +209,9 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
             if (response.success) {
                 folderId = response.id;
                 citedLitigation.folderId = folderId;
-                response = await addTaksParents(citedLitigation.taskId, folderId);
+                response = await addTaksParents(citedLitigation, folderId);
                 if (!response.success) {
-                    citedLitigation.errors.push(`<li>Não foi possível incluir Incluir/Criar a pasta relacionada: ${response.message}</li>`)
+                    citedLitigation.errors.push(`<li>Não foi possível Incluir/Criar a pasta relacionada: ${response.message}</li>`)
                 }
             }
         } else if (response.success && response.id != null) {
@@ -216,7 +219,7 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
             citedLitigation.folderId = folderId;
             response = await addTaksParents(citedLitigation.taskId, folderId);
             if (!response.success) {
-                citedLitigation.errors.push(`<li>Não foi possível incluir Incluir/Criar a pasta relacionada: ${response.message}</li>`)
+                citedLitigation.errors.push(`<li>Não foi possível Incluir/Criar a pasta relacionada: ${response.message}</li>`)
             }
         }
     } catch (error) {

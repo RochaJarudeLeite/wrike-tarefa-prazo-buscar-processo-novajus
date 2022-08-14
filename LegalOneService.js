@@ -130,8 +130,8 @@ async function getLitigationsByCNJOrFolder(
                 await Promise.resolve(results())
                 let methods = [];
                 methods.push(citedLitigation.htmlDescription = await createLitigationHTMLBlock(litigationData));
-                let folderTitle = litigationData.length === 1 ? litigationData[0].folder : "";
-                if (folderTitle) {
+                let folderTitle = litigationData.length === 1 ? litigationData[0].folder : null;
+                if (folderTitle != null) {
                     methods.push(await updateTaskParentFolder(citedLitigation, folderTitle))
                 } else {
                     citedLitigation.comments.push(`Múltiplos processos encontrados. Inclua/crie as etiquetas de pastas manualmente.`)

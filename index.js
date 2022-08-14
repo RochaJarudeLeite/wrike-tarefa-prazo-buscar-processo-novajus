@@ -54,7 +54,7 @@ export async function handler(event) {
             taskId: taskId,
             errors: [],
             comments: [],
-            folderId: ""
+            folderId: null
         }
         if (litigation.groups.cnj != null) {
             cl.litigation = litigation.groups.cnj;
@@ -87,7 +87,7 @@ export async function handler(event) {
     });
     //Update citedLitigation folder description
     let methods = citedLitigations.map(cl => {
-        if (cl.folderId !== "") {
+        if (cl.folderId !== null) {
             let folderDescription = cl.htmlDescription.join("");
             return Wrike.updateFolderDescription(cl.folderId, folderDescription);
         }

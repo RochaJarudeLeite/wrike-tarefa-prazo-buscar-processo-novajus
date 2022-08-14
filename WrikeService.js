@@ -108,7 +108,7 @@ async function updateFolderDescription(citedLitigation, newDescription) {
             let data = body.data;
             if (data.length > 0) {
                 if (data[0].scope === "RbFolder") {
-                    await (citedLitigation);
+                    await restoreIfDeletedFolder(citedLitigation);
                 }
                 return {"success": true};
             }

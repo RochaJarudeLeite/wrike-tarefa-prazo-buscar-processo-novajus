@@ -4,9 +4,7 @@ import fetch from 'node-fetch';
 import {getSecret, setSecret} from './aws_secrets.js';
 import * as S3 from './s3.js';
 
-let params = {
-    SecretId: 'prod/LegalOne'
-}
+
 const tempFolder = os.tmpdir() + "/";
 let tokenInfoFile = 'LegalOneTokenInfo.json'
 let legalOneKey;
@@ -14,8 +12,11 @@ let tokenInfo;
 
 
 async function GetTokenExpirationDateAndSecret() {
+    let secretParams = {
+        SecretId: 'prod/LegalOne'
+    }
     console.log("Getting LegalOne Key from Secrets Manager")
-    let secretResponse = getSecret(params);
+    let secretResponse = getSecret(secretParams);
     try {
         console.log("Reading Token info from /tmp/LegalOneTokenInfo.json")
         let localFile = fs.readFileSync(tempFolder + tokenInfoFile);
@@ -66,7 +67,11 @@ async function getToken(forced = false) {
         fs.writeFileSync(tempFolder + tokenInfoFile, JSON.stringify(tokenInfo))
         await S3.uploadFileS3(tempFolder + tokenInfoFile);
         legalOneKey = body.access_token;
-        await setSecret(body.access_token);
+        let params = {
+            SecretId: 'prod/LegalOne',
+            SecretString: JSON.stringify({'THOMSON_REUTERS_TOKEN': legalOneKey})
+        }
+        await setSecret(params);
         console.log("Token updated.");
     } else {
         console.info("Token still valid. Using existing token")
@@ -78,3 +83,5 @@ export {
     getToken as getLegalOneToken,
     GetTokenExpirationDateAndSecret as GetLegalOneTokenExpirationDate
 }
+
+export {getToken as getLegalOneToken}

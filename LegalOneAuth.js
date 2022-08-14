@@ -1,12 +1,13 @@
-import fs from 'fs'
-import fetch from 'node-fetch'
+import fs from 'fs';
+import os from 'os';
+import fetch from 'node-fetch';
 import {getSecret, setSecret} from './aws_secrets.js';
-import * as S3 from './s3.js'
+import * as S3 from './s3.js';
 
 let params = {
     SecretId: 'prod/LegalOne'
 }
-const tempFolder = process.env.TEMP_FOLDER;
+const tempFolder = os.tmpdir() + "/";
 let tokenInfoFile = 'LegalOneTokenInfo.json'
 let legalOneKey;
 let tokenInfo;

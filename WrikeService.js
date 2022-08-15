@@ -210,7 +210,7 @@ async function createTaskComment(taskId, comment, isPlainText = false) {
 }
 
 async function searchFolder(folderTitle) {
-    folderTitle.replaceAll('/', '_');
+    folderTitle = folderTitle.replaceAll('/', '_');
     let config = {
         method: 'post',
         headers: {
@@ -239,7 +239,7 @@ async function searchFolder(folderTitle) {
 }
 
 async function createFolder(folderTitle) {
-    folderTitle.replaceAll('/', '_');
+    folderTitle = folderTitle.replaceAll('/', '_');
     let config = {
         method: 'post',
         headers: {

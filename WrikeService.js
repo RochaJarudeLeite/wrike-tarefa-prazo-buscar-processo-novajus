@@ -3,7 +3,7 @@ import fetch from 'node-fetch'
 
 const token = await GetWrikeToken()
 let tempLitigationFolderId = "IEABJD3YI44HKA7O";
-
+let novajusIdCustomField = "IEABJD3YJUADBUZU";
 
 async function getTask(taskId) {
     let config = {
@@ -238,7 +238,7 @@ async function searchFolder(folderTitle) {
     }
 }
 
-async function createFolder(folderTitle) {
+async function createFolder(folderTitle,novajusId) {
     folderTitle = folderTitle.replaceAll('/', '_');
     let config = {
         method: 'post',
@@ -246,7 +246,8 @@ async function createFolder(folderTitle) {
             Authorization: 'Bearer ' + token
         }
     }
-    let url = `https://www.wrike.com/api/v4/folders/${tempLitigationFolderId}/folders?title=${folderTitle}`
+    let novajusIdCustomField = {"id":"IEABJD3YJUADBUZU","value":`${novajusId}`};
+    let url = `https://www.wrike.com/api/v4/folders/${tempLitigationFolderId}/folders?title=${folderTitle}&customFields=[${novajusIdCustomField}]`
     try {
         const response = await fetch(url, config).then((response) => {
             return response
@@ -258,7 +259,34 @@ async function createFolder(folderTitle) {
                 return {"success": true, "id": data[0].id};
             }
         } else {
-            return {"success": false, "message": "Erro ao obter dados."};
+            return {"success": false, "message": "Erro ao criar pasta."};
+        }
+    } catch (error) {
+        return {"success": false, "message": "Erro ao criar pasta: " + error};
+    }
+}
+
+async function updateFolderNovajusIdCustomField(folderId,novajusId) {
+    let config = {
+        method: 'put',
+        headers: {
+            Authorization: 'Bearer ' + token
+        }
+    }
+    let novajusIdCustomField = {"id":"IEABJD3YJUADBUZU","value":`${novajusId}`};
+    let url = `https://www.wrike.com/api/v4/folders/${folderId}?customFields=[${novajusIdCustomField}]`
+    try {
+        const response = await fetch(url, config).then((response) => {
+            return response
+        })
+        if (response.status === 200) {
+            let body = await response.json();
+            let data = body.data;
+            if (data.length > 0) {
+                return {"success": true, "id": data[0].id};
+            }
+        } else {
+            return {"success": false, "message": "Erro ao atualizar ."};
         }
     } catch (error) {
         return {"success": false, "message": "Erro: " + error};
@@ -270,7 +298,7 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
         let folderId = "";
         let response = await searchFolder(folderTitle);
         if (response.success && response.id == null) {
-            response = await createFolder(folderTitle);
+            response = await createFolder(folderTitle,citedLitigation.novajudId);
             if (response.success) {
                 folderId = response.id;
                 citedLitigation.folderId = folderId;
@@ -285,6 +313,10 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
             response = await addTaksParents(citedLitigation, folderId);
             if (!response.success) {
                 citedLitigation.errors.push(`<li>Não foi possível Incluir/Criar a pasta relacionada: ${response.message}</li>`)
+            }
+            response = await updateFolderNovajusIdCustomField(folderId, citedLitigation.novajudId);
+            if (!response.success) {
+                citedLitigation.errors.push(`<li>Não foi possível adicionar o id do novajus na pasta indicada: ${response.message}</li>`)
             }
         }
     } catch (error) {

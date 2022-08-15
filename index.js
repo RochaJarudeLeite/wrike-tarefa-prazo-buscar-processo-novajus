@@ -53,7 +53,8 @@ export async function handler(event) {
             taskId: taskId,
             errors: [],
             comments: [],
-            folderId: null
+            folderId: null,
+            novajudId: null
         }
         if (litigation.groups.cnj != null) {
             cl.litigation = litigation.groups.cnj;

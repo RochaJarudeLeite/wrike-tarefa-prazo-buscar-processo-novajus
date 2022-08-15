@@ -7,18 +7,18 @@ const regexDescriptionInfo = /Processos Relacionados<\/b><br ?\/>(?<litigations>
 const regexLitigations = /(?<cnj>\d{7}-\d{2}.\d{4}.\d.\d{2}.\d{4}|.*?\d{20})|(?<folder>Proc-\d{7}\/\d+|Proc-\d{7})/g;
 
 export async function handler(event) {
-    let LOTokenMethod = GetLegalOneTokenExpirationDate();
     let sns = event.Records[0].Sns;
     let message = sns.Message;
     let messageJson = JSON.parse(message);
     console.log(messageJson);
-    if (messageJson.eventType === 'TaskCreated') {
+    if (messageJson[0].eventType !== 'TaskCreated') {
         response = {
             statusCode: 200,
             body: JSON.stringify('Skiped'),
         };
         return response;
     }
+    let LOTokenMethod = GetLegalOneTokenExpirationDate();
     let taskId = messageJson[0].taskId;
     let response = await Wrike.getTask(taskId);
     if (!response.success) {

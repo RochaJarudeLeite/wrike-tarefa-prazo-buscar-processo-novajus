@@ -12,9 +12,9 @@ export async function handler(event) {
     let messageJson = JSON.parse(message);
     console.log(messageJson);
     if (messageJson[0].eventType !== 'TaskCreated') {
-        response = {
+        let response = {
             statusCode: 200,
-            body: JSON.stringify('Skiped'),
+            body: JSON.stringify('Skipped'),
         };
         return response;
     }
@@ -33,7 +33,7 @@ export async function handler(event) {
     if (matches == null) {
         response = {
             statusCode: 200,
-            body: JSON.stringify('Skiped'),
+            body: JSON.stringify('Skipped'),
         };
         return response;
     }

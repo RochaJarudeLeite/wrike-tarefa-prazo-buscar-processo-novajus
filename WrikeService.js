@@ -267,29 +267,41 @@ async function createFolder(folderTitle,novajusId) {
 }
 
 async function updateFolderNovajusIdCustomField(folderId,novajusId) {
-    let config = {
-        method: 'put',
-        headers: {
-            Authorization: 'Bearer ' + token
-        }
-    }
-    let novajusIdCustomField = {"id":"IEABJD3YJUADBUZU","value":`${novajusId}`};
-    let url = `https://www.wrike.com/api/v4/folders/${folderId}?customFields=[${novajusIdCustomField}]`
-    try {
-        const response = await fetch(url, config).then((response) => {
-            return response
-        })
-        if (response.status === 200) {
-            let body = await response.json();
-            let data = body.data;
-            if (data.length > 0) {
-                return {"success": true, "id": data[0].id};
-            }
+    let folderData = await GetFolder(folderId);
+    if (folderData.success) {
+        let newCustomField = {"id":novajusIdCustomField,"value":`${novajusId}`};
+        // replace folderData.customField with id of novajusIdCustomField with newCustomField
+        let customFields = folderData.data.customFields;
+        let index = customFields.findIndex(x => x.id === novajusIdCustomField);
+        if (index > -1) {
+            customFields[index] = newCustomField;
         } else {
-            return {"success": false, "message": "Erro ao atualizar ."};
+            customFields.push(newCustomField);
         }
-    } catch (error) {
-        return {"success": false, "message": "Erro: " + error};
+        let config = {
+            method: 'put',
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }
+        let url = `https://www.wrike.com/api/v4/folders/${folderId}?customFields=${JSON.stringify(customFields)}`
+        try {
+            const response = await fetch(url, config).then((response) => {
+                return response
+            })
+            if (response.status === 200) {
+                let body = await response.json();
+                let data = body.data;
+                if (data.length > 0) {
+                    return {"success": true, "id": data[0].id};
+                }
+            } else {
+                return {"success": false, "message": `Erro ao atualizar o Novajus Id da pasta ${folderData.title}.`};
+            }
+        } catch (error) {
+            return {"success": false, "message": `Erro ao atualizar o Novajus Id da pasta ${folderData.title}. Erro: ${error}`};
+        }
+        return {"success": false, "message": `Erro ao atualizar o Novajus Id da pasta id ${folderId}. Erro: ${folderData.message}`};
     }
 }
 

@@ -366,10 +366,10 @@ async function getTheLatestThreeLitigationUpdates(litigationId, token = null, re
                 }
             }
             const response = await fetch(
-                `https://api.thomsonreuters.com/legalone/v1/api/rest/Updates?$filter=typeId eq 363 &$expand=relationships($filter=linkId eq ${litigationId})&$orderby=creationDate desc&$top=3$`,
+                `https://api.thomsonreuters.com/legalone/v1/api/rest/Updates?$filter=typeId eq 363 &$expand=relationships($filter=linkId eq ${litigationId})&$orderby=creationDate desc&$top=3`,
                 config
             ).then((response) => {
-                if (!response.ok) {
+                if (!response.status !== 200) {
                     if (retry < 3) {
                         return getTheLatestThreeLitigationUpdates(litigationId, token, retry + 1)
                     }

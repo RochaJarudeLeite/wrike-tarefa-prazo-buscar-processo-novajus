@@ -33,8 +33,9 @@ async function getTask(taskId) {
     }
 }
 
-async function addTaksParents(citedLitigation, parentId) {
+async function addTaksParents(citedLitigation) {
     let taskId = citedLitigation.taskId;
+    let parentId = citedLitigation.folderId
     let config = {
         method: 'put',
         headers: {
@@ -309,7 +310,8 @@ async function updateFolderNovajusIdCustomField(citedLitigation) {
     }
 }
 
-async function updateTaskParentFolder(citedLitigation, folderTitle) {
+async function updateTaskParentFolder(citedLitigation, ) {
+    let folderTitle = citedLitigation.folderTitle
     try {
         let folderId = "";
         let response = await searchFolder(folderTitle);
@@ -318,7 +320,7 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
             if (response.success) {
                 folderId = response.id;
                 citedLitigation.folderId = folderId;
-                response = await addTaksParents(citedLitigation, folderId);
+                response = await addTaksParents(citedLitigation);
                 if (!response.success) {
                     citedLitigation.errors.push(`<li>Não foi possível Incluir/Criar a pasta relacionada: ${response.message}</li>`)
                 }
@@ -326,11 +328,11 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
         } else if (response.success && response.id != null) {
             folderId = response.id;
             citedLitigation.folderId = folderId;
-            response = await addTaksParents(citedLitigation, folderId);
+            response = await addTaksParents(citedLitigation);
             if (!response.success) {
                 citedLitigation.errors.push(`<li>Não foi possível Incluir/Criar a pasta relacionada: ${response.message}</li>`)
             }
-            response = await updateFolderNovajusIdCustomField(folderId, citedLitigation.novajusId);
+            response = await updateFolderNovajusIdCustomField(citedLitigation);
             if (!response.success) {
                 citedLitigation.errors.push(`<li>Não foi possível adicionar o id do novajus na pasta indicada: ${response.message}</li>`)
             }

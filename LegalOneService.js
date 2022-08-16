@@ -134,7 +134,8 @@ async function getLitigationsByCNJOrFolder(
                 let folderTitle = litigationData.length === 1 ? litigationData[0].folder : null;
                 if (folderTitle != null) {
                     citedLitigation.novajudId = litigationData[0].id;
-                    methods.push(await updateTaskParentFolder(citedLitigation, folderTitle))
+                    citedLitigation.folderTitle = folderTitle;
+                    methods.push(await updateTaskParentFolder(citedLitigation))
                 } else {
                     citedLitigation.comments.push(`Múltiplos processos encontrados. Inclua/crie as etiquetas de pastas manualmente.`)
                 }

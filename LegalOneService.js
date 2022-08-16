@@ -112,7 +112,8 @@ async function getLitigationsByCNJOrFolder(
                         monetaryAmount: money.format(litigation.monetaryAmount)
                             ? money.format(litigation.monetaryAmount)
                             : 'Não Indicado',
-                        participants: litigation.participants ? litigation.participants : []
+                        participants: litigation.participants ? litigation.participants : [],
+                        updates: (await getTheLatestThreeLitigationUpdates(litigation.id)).success ? (await getTheLatestThreeLitigationUpdates(litigation.id)).content : [],
                     })
                 }
                 let results = async () => {
@@ -210,6 +211,12 @@ async function createLitigationHTMLBlock(litigationData) {
         //add Novajus e Incluir links
         payload.push(`<div>`);
         payload.push(`<a href="https://rj.novajus.com.br/processos/processos/details/${litigation.id}" style="margin-right: 4px">Novajus</a> `);
+        // litigation updates
+        if (litigation.updates.length > 0) {
+            for (let i = 0; i < litigation.updates.length; i++) {
+                payload.push(litigation.updates[i]);
+            }
+        }
         //close divs
         payload.push("</div>");
         payload.push("</div>");
@@ -345,9 +352,9 @@ async function getState(stateId, token = null, retry = 3) {
     }
 }
 
-//Get City
-async function getCity(cityId, token = null, retry = 3) {
-    if (cityId != null) {
+//Get the latest three Litigation Updates
+async function getTheLatestThreeLitigationUpdates(litigationId, token = null, retry = 3) {
+    if (litigationId != null) {
         try {
             if (token == null) {
                 token = await getLegalOneToken()
@@ -359,23 +366,39 @@ async function getCity(cityId, token = null, retry = 3) {
                 }
             }
             const response = await fetch(
-                `https://api.thomsonreuters.com/legalone/v1/api/rest/Cities/${cityId}`,
+                `https://api.thomsonreuters.com/legalone/v1/api/rest/Updates?$filter=typeId eq 363 &$expand=relationships($filter=linkId eq ${litigationId})&$orderby=creationDate desc&$top=3$`,
                 config
             ).then((response) => {
                 if (!response.ok) {
                     if (retry < 3) {
-                        return getCity(cityId, token, retry + 1)
+                        return getTheLatestThreeLitigationUpdates(litigationId, token, retry + 1)
                     }
                 }
                 return response
             })
             let body = await response.json()
-            return body.name
+            let updatesBlocks = await createLitigationsUpdateHTMLBlock(body.value);
+            return {success: true, content: updatesBlocks}
         } catch (error) {
-            return '❌'
+            return {success: false, content: [`<ul><li>❌ + ${error}</ul></li>`]}
         }
     } else {
-        return 'Não Indicada'
+        return {success: false, content: [`<ul><li>'Litigation Id não indicado'</ul></li>`]}
+    }
+}
+
+
+async function createLitigationsUpdateHTMLBlock(litigationsUpdates){
+    if (litigationsUpdates.length > 0) {
+        let htmlBlock = []
+        htmlBlock.push("<ul>")
+        litigationsUpdates.forEach(update => {
+            htmlBlock.push(`<li>${update.description}</li>`)
+        })
+        htmlBlock.push("</ul>")
+        return htmlBlock
+    } else {
+        return []
     }
 }
 

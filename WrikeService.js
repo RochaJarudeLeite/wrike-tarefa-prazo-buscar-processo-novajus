@@ -155,7 +155,8 @@ async function restoreIfDeletedFolder(citedLitigation) {
     }
 }
 
-async function GetFolder(folderId) {
+async function GetFolder(citedLitigation) {
+    let folderId = citedLitigation.folderId;
     let config = {
         method: 'get',
         headers: {
@@ -170,6 +171,7 @@ async function GetFolder(folderId) {
         if (response.status === 200) {
             let body = await response.json();
             let data = body.data;
+            citedLitigation.folderTitle = data[0].title;
             if (data.length > 0) {
                 return {"success": true, "data": data[0]};
             }
@@ -266,8 +268,10 @@ async function createFolder(folderTitle,novajusId) {
     }
 }
 
-async function updateFolderNovajusIdCustomField(folderId,novajusId) {
-    let folderData = await GetFolder(folderId);
+async function updateFolderNovajusIdCustomField(citedLitigation) {
+    let folderId = citedLitigation.folderId;
+    let novajusId = citedLitigation.novajusId;
+    let folderData = await GetFolder(citedLitigation);
     if (folderData.success) {
         let newCustomField = {"id":novajusIdCustomField,"value":`${novajusId}`};
         // replace folderData.customField with id of novajusIdCustomField with newCustomField
@@ -310,7 +314,7 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
         let folderId = "";
         let response = await searchFolder(folderTitle);
         if (response.success && response.id == null) {
-            response = await createFolder(folderTitle,citedLitigation.novajudId);
+            response = await createFolder(folderTitle,citedLitigation.novajusId);
             if (response.success) {
                 folderId = response.id;
                 citedLitigation.folderId = folderId;
@@ -326,7 +330,7 @@ async function updateTaskParentFolder(citedLitigation, folderTitle) {
             if (!response.success) {
                 citedLitigation.errors.push(`<li>Não foi possível Incluir/Criar a pasta relacionada: ${response.message}</li>`)
             }
-            response = await updateFolderNovajusIdCustomField(folderId, citedLitigation.novajudId);
+            response = await updateFolderNovajusIdCustomField(folderId, citedLitigation.novajusId);
             if (!response.success) {
                 citedLitigation.errors.push(`<li>Não foi possível adicionar o id do novajus na pasta indicada: ${response.message}</li>`)
             }

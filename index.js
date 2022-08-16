@@ -54,7 +54,8 @@ export async function handler(event) {
             errors: [],
             comments: [],
             folderId: null,
-            novajudId: null
+            novajusId: null,
+            folderTitle: null,
         }
         if (litigation.groups.cnj != null) {
             cl.litigation = litigation.groups.cnj;
@@ -122,11 +123,17 @@ export async function handler(event) {
 
     //Create task comment
     if (newComment !== "") {
+        newComment = '🤖 RJL-Bot: ' + newComment;
         methods.push(Wrike.createTaskComment(taskId, newComment, false));
     }
     let newTaskDescription = wrikeTask.description.replace(regexDescriptionInfo, `Processos Relacionados<\/b><br \/><ul>${newDescriptionInfo}<\/ul>`);
     methods.push(Wrike.updateTaskDescription(taskId, newTaskDescription));
     response = await Promise.all(methods);
+    if (!response.success) {
+        console.log(response.message);
+    }
+    let comment = `🤖 RJL-Bot: Descrição atualizada e pasta(s) vinculada(s): ${citedLitigations.map(x => x.folderTitle).join(', ')}.`;
+    response = await Wrike.createTaskComment(taskId, comment, false);
     if (!response.success) {
         console.log(response.message);
     }

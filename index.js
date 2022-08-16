@@ -3,7 +3,7 @@ import {GetLegalOneTokenExpirationDate} from './LegalOneAuth.js'
 import * as Wrike from './WrikeService.js';
 import * as v from 'validate-cnj'
 
-const regexDescriptionInfo = /Processos Relacionados<\/b><br ?\/>(?<litigations>.*?)<br ?\/>/;
+const regexDescriptionInfo = /Processos Relacionados<\/b>(<br \/>)?(<br \/>)?(?<litigations>[0-9P].*?)<br \/><br \/>/;
 const regexLitigations = /(?<cnj>\d{7}-\d{2}.\d{4}.\d.\d{2}.\d{4}|.*?\d{20})|(?<folder>Proc-\d{7}\/\d+|Proc-\d{7})/g;
 
 export async function handler(event) {
@@ -12,6 +12,7 @@ export async function handler(event) {
     let messageJson = JSON.parse(message);
     console.log(messageJson);
     if (messageJson[0].eventType !== 'TaskCreated') {
+        console.log("Skipped");
         let response = {
             statusCode: 200,
             body: JSON.stringify('Skipped'),
@@ -31,6 +32,7 @@ export async function handler(event) {
     let wrikeTask = response.wrikeTask;
     let matches = regexDescriptionInfo.exec(wrikeTask.description);
     if (matches == null) {
+        console.log("Skipped");
         response = {
             statusCode: 200,
             body: JSON.stringify('Skipped'),
@@ -88,7 +90,7 @@ export async function handler(event) {
     });
     //Update citedLitigation folder description
     let methods = citedLitigations.map(cl => {
-        if (cl.folderId !== null) {
+        if (cl.wrikeFolderId !== null) {
             let folderDescription = cl.htmlDescription.join("");
             return Wrike.updateFolderDescription(cl, folderDescription);
         }

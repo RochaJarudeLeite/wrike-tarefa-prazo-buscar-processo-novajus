@@ -3,7 +3,7 @@ import fetch from 'node-fetch'
 
 const token = await GetWrikeToken()
 let tempLitigationFolderId = "IEABJD3YI44HKA7O";
-let novajusIdCustomField = "IEABJD3YJUADBUZU";
+let novajusIdCustomFieldId = "IEABJD3YJUADBUZU";
 
 async function getTask(taskId) {
     let config = {
@@ -35,7 +35,7 @@ async function getTask(taskId) {
 
 async function addTaksParents(citedLitigation) {
     let taskId = citedLitigation.taskId;
-    let parentId = citedLitigation.folderId
+    let parentId = citedLitigation.wrikeFolderId
     let config = {
         method: 'put',
         headers: {
@@ -92,7 +92,7 @@ async function updateTaskDescription(taskId, newDescription) {
 }
 
 async function updateFolderDescription(citedLitigation, newDescription) {
-    let folderId = citedLitigation.folderId;
+    let folderId = citedLitigation.wrikeFolderId;
     let config = {
         method: 'put',
         headers: {
@@ -126,7 +126,7 @@ async function updateFolderDescription(citedLitigation, newDescription) {
 }
 
 async function restoreIfDeletedFolder(citedLitigation) {
-    let folderId = citedLitigation.folderId;
+    let folderId = citedLitigation.wrikeFolderId;
     let config = {
         method: 'put',
         headers: {
@@ -157,7 +157,7 @@ async function restoreIfDeletedFolder(citedLitigation) {
 }
 
 async function GetFolder(citedLitigation) {
-    let folderId = citedLitigation.folderId;
+    let folderId = citedLitigation.wrikeFolderId;
     let config = {
         method: 'get',
         headers: {
@@ -249,8 +249,9 @@ async function createFolder(folderTitle,novajusId) {
             Authorization: 'Bearer ' + token
         }
     }
-    let novajusIdCustomField = {"id":"IEABJD3YJUADBUZU","value":`${novajusId}`};
-    let url = `https://www.wrike.com/api/v4/folders/${tempLitigationFolderId}/folders?title=${folderTitle}&customFields=[${novajusIdCustomField}]`
+    let newCustomField = {"id":novajusIdCustomFieldId,"value":`${novajusId}`};
+    let newCustomFields = [newCustomField];
+    let url = `https://www.wrike.com/api/v4/folders/${tempLitigationFolderId}/folders?title=${folderTitle}&customFields=${JSON.stringify(newCustomFields)}`
     try {
         const response = await fetch(url, config).then((response) => {
             return response
@@ -270,14 +271,14 @@ async function createFolder(folderTitle,novajusId) {
 }
 
 async function updateFolderNovajusIdCustomField(citedLitigation) {
-    let folderId = citedLitigation.folderId;
+    let folderId = citedLitigation.wrikeFolderId;
     let novajusId = citedLitigation.novajusId;
     let folderData = await GetFolder(citedLitigation);
     if (folderData.success) {
-        let newCustomField = {"id":novajusIdCustomField,"value":`${novajusId}`};
+        let newCustomField = {"id":novajusIdCustomFieldId,"value":`${novajusId}`};
         // replace folderData.customField with id of novajusIdCustomField with newCustomField
         let customFields = folderData.data.customFields;
-        let index = customFields.findIndex(x => x.id === novajusIdCustomField);
+        let index = customFields.findIndex(x => x.id === novajusIdCustomFieldId);
         if (index > -1) {
             customFields[index] = newCustomField;
         } else {
@@ -319,7 +320,7 @@ async function updateTaskParentFolder(citedLitigation, ) {
             response = await createFolder(folderTitle,citedLitigation.novajusId);
             if (response.success) {
                 folderId = response.id;
-                citedLitigation.folderId = folderId;
+                citedLitigation.wrikeFolderId = folderId;
                 response = await addTaksParents(citedLitigation);
                 if (!response.success) {
                     citedLitigation.errors.push(`<li>Não foi possível Incluir/Criar a pasta relacionada: ${response.message}</li>`)
@@ -327,7 +328,7 @@ async function updateTaskParentFolder(citedLitigation, ) {
             }
         } else if (response.success && response.id != null) {
             folderId = response.id;
-            citedLitigation.folderId = folderId;
+            citedLitigation.wrikeFolderId = folderId;
             response = await addTaksParents(citedLitigation);
             if (!response.success) {
                 citedLitigation.errors.push(`<li>Não foi possível Incluir/Criar a pasta relacionada: ${response.message}</li>`)

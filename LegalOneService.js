@@ -113,7 +113,7 @@ async function getLitigationsByCNJOrFolder(
                             ? money.format(litigation.monetaryAmount)
                             : 'Não Indicado',
                         participants: litigation.participants ? litigation.participants : [],
-                        updates: (await getTheLatestThreeLitigationUpdates(litigation.id)).success ? (await getTheLatestThreeLitigationUpdates(litigation.id)).content : [],
+                        updates: (await getTheLatestThreeLitigationUpdates(litigation.id)).content,
                     })
                 }
                 let results = async () => {
@@ -133,7 +133,7 @@ async function getLitigationsByCNJOrFolder(
                 citedLitigation.htmlDescription = await createLitigationHTMLBlock(litigationData);
                 let folderTitle = litigationData.length === 1 ? litigationData[0].folder : null;
                 if (folderTitle != null) {
-                    citedLitigation.novajudId = litigationData[0].id;
+                    citedLitigation.novajusId = litigationData[0].id;
                     citedLitigation.folderTitle = folderTitle;
                     methods.push(await updateTaskParentFolder(citedLitigation))
                 } else {
@@ -367,7 +367,7 @@ async function getTheLatestThreeLitigationUpdates(litigationId, token = null, re
                 }
             }
             const response = await fetch(
-                `https://api.thomsonreuters.com/legalone/v1/api/rest/Updates?$filter=typeId eq 363 &$expand=relationships($filter=linkId eq ${litigationId})&$orderby=creationDate desc&$top=3`,
+                `https://api.thomsonreuters.com/legalone/v1/api/rest/Updates?$orderby=creationDate desc&$top=3&$filter=relationships/any(d:d/linkId eq ${litigationId}) and typeId eq 363`,
                 config
             ).then((response) => {
                 if (!response.status !== 200) {

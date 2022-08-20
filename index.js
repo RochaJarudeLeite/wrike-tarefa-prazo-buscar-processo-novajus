@@ -32,7 +32,7 @@ export async function handler(event) {
     let taskId = messageJson[0].taskId;
     let response = await Wrike.getTask(taskId);
     if (!response.success) {
-        let comment = `Não foi possível obter os dados da tarefa para rodar a automação de processos relacionados. Erro: ${response.message}`;
+        let comment = `🤖 RJL-Bot: Não foi possível obter os dados da tarefa para rodar a automação. Erro: ${response.message}`;
         response = await Wrike.createTaskComment(taskId, comment, true);
         if (!response.success) {
             console.log(response.message);
@@ -94,7 +94,7 @@ export async function handler(event) {
     let validCitedLitigations = citedLitigations.filter(cl => cl.isValid);
     let legalOneToken = await legalOneTokePromise;
     if (legalOneToken == null) {
-        let comment = `Automação falou ao obter o token do Novajus. Erro: ${response.message}`;
+        let comment = `🤖 RJL-Bot: Automação falou ao obter o token do Novajus. Erro: ${response.message}`;
         response = await Wrike.createTaskComment(taskId, comment, true);
         if (!response.success) {
             console.log(response.message);

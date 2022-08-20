@@ -8,11 +8,12 @@ const regexDescriptionInfo = /Processos Relacionados<\/b>(<br \/>)?(<br \/>)?(?<
 const regexLitigations = /(?<cnj>\d{7}-\d{2}.\d{4}.\d.\d{2}.\d{4}|.*?\d{20})|(?<folder>Proc-\d{7}\/\d+|Proc-\d{7})/g;
 
 export async function handler(event) {
+    let validEventType = 'TaskCreated';
     let sns = event.Records[0].Sns;
     let message = sns.Message;
     let messageJson = JSON.parse(message);
     console.log(messageJson);
-    if (messageJson[0].eventType !== 'TaskCreated') {
+    if (messageJson[0].eventType !== validEventType) {
         console.log("Skipped");
         let response = {
             statusCode: 200,

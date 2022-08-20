@@ -1,7 +1,6 @@
 import fs from "fs";
 import * as index from "./index.js";
 
-
 // Test get Legal One Token
 // let test = await getLegalOneToken()
 

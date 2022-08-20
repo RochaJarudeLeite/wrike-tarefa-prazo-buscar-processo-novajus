@@ -1,15 +1,25 @@
 import {GetWrikeToken} from './WrikeAuth.js'
+import FormData from 'form-data';
 import fetch from 'node-fetch'
+import axios from "axios";
 
-const token = await GetWrikeToken()
+let wrikeToken;
+let wrikeTokenPromise = GetWrikeToken();
 let tempLitigationFolderId = "IEABJD3YI44HKA7O";
 let novajusIdCustomFieldId = "IEABJD3YJUADBUZU";
 
+async function wrikeTokenPromiseCheck() {
+    if (wrikeToken == null) {
+        wrikeToken = await wrikeTokenPromise;
+    }
+}
+
 async function getTask(taskId) {
+    await wrikeTokenPromiseCheck()
     let config = {
         method: 'get',
         headers: {
-            Authorization: 'Bearer ' + token
+            Authorization: 'Bearer ' + wrikeToken
         }
     }
     let url = `https://www.wrike.com/api/v4/tasks/${taskId}`
@@ -39,7 +49,7 @@ async function addTaksParents(citedLitigation) {
     let config = {
         method: 'put',
         headers: {
-            Authorization: 'Bearer ' + token
+            Authorization: 'Bearer ' + wrikeToken
         }
     }
     let url = `https://www.wrike.com/api/v4/tasks/${taskId}?addParents=["${parentId}"]`
@@ -66,19 +76,24 @@ async function addTaksParents(citedLitigation) {
 }
 
 async function updateTaskDescription(taskId, newDescription) {
+    // form data payload
+    let formData = new FormData();
+    formData.append('description', newDescription);
     let config = {
         method: 'put',
         headers: {
-            Authorization: 'Bearer ' + token
-        }
+            Authorization: 'Bearer ' + wrikeToken,
+            ...formData.getHeaders()
+        },
+        data: formData
     }
-    let url = `https://www.wrike.com/api/v4/tasks/${taskId}?description=${newDescription}`
+    let url = `https://www.wrike.com/api/v4/tasks/${taskId}`
     try {
-        const response = await fetch(url, config).then((response) => {
+        const response = await axios(url, config).then((response) => {
             return response
         })
         if (response.status === 200) {
-            let body = await response.json();
+            let body = response.data;
             let data = body.data;
             if (data.length > 0) {
                 return {"success": true};
@@ -93,19 +108,24 @@ async function updateTaskDescription(taskId, newDescription) {
 
 async function updateFolderDescription(citedLitigation, newDescription) {
     let folderId = citedLitigation.wrikeFolderId;
+    // form data payload
+    let formData = new FormData();
+    formData.append('description', newDescription);
     let config = {
         method: 'put',
         headers: {
-            Authorization: 'Bearer ' + token
-        }
+            Authorization: 'Bearer ' + wrikeToken,
+            ...formData.getHeaders()
+        },
+        data: formData
     }
-    let url = `https://www.wrike.com/api/v4/folders/${folderId}?description=${newDescription}`
+    let url = `https://www.wrike.com/api/v4/folders/${folderId}`
     try {
-        const response = await fetch(url, config).then((response) => {
+        const response = await axios(url, config).then((response) => {
             return response
         })
         if (response.status === 200) {
-            let body = await response.json();
+            let body = response.data;
             let data = body.data;
             if (data.length > 0) {
                 if (data[0].scope === "RbFolder") {
@@ -130,7 +150,7 @@ async function restoreIfDeletedFolder(citedLitigation) {
     let config = {
         method: 'put',
         headers: {
-            Authorization: 'Bearer ' + token
+            Authorization: 'Bearer ' + wrikeToken
         }
     }
     let url = `https://www.wrike.com/api/v4/folders/${folderId}?restore=true`
@@ -161,7 +181,7 @@ async function GetFolder(citedLitigation) {
     let config = {
         method: 'get',
         headers: {
-            Authorization: 'Bearer ' + token
+            Authorization: 'Bearer ' + wrikeToken
         }
     }
     let url = `https://www.wrike.com/api/v4/folders/${folderId}`
@@ -190,7 +210,7 @@ async function createTaskComment(taskId, comment, isPlainText = false) {
     let config = {
         method: 'post',
         headers: {
-            Authorization: 'Bearer ' + token
+            Authorization: 'Bearer ' + wrikeToken
         }
     }
     let url = `https://www.wrike.com/api/v4/tasks/${taskId}/comments?text=${comment}&plainText=${isPlainText}`
@@ -217,7 +237,7 @@ async function searchFolder(folderTitle) {
     let config = {
         method: 'post',
         headers: {
-            Authorization: 'Bearer ' + token
+            Authorization: 'Bearer ' + wrikeToken
         }
     }
     let url = `https://www.wrike.com/api/v4/ediscovery_search?scopes=["folder","project"]&terms=["${folderTitle}"]`
@@ -241,15 +261,15 @@ async function searchFolder(folderTitle) {
     }
 }
 
-async function createFolder(folderTitle,novajusId) {
+async function createFolder(folderTitle, novajusId) {
     folderTitle = folderTitle.replaceAll('/', '_');
     let config = {
         method: 'post',
         headers: {
-            Authorization: 'Bearer ' + token
+            Authorization: 'Bearer ' + wrikeToken
         }
     }
-    let newCustomField = {"id":novajusIdCustomFieldId,"value":`${novajusId}`};
+    let newCustomField = {"id": novajusIdCustomFieldId, "value": `${novajusId}`};
     let newCustomFields = [newCustomField];
     let url = `https://www.wrike.com/api/v4/folders/${tempLitigationFolderId}/folders?title=${folderTitle}&customFields=${JSON.stringify(newCustomFields)}`
     try {
@@ -275,7 +295,7 @@ async function updateFolderNovajusIdCustomField(citedLitigation) {
     let novajusId = citedLitigation.novajusId;
     let folderData = await GetFolder(citedLitigation);
     if (folderData.success) {
-        let newCustomField = {"id":novajusIdCustomFieldId,"value":`${novajusId}`};
+        let newCustomField = {"id": novajusIdCustomFieldId, "value": `${novajusId}`};
         // replace folderData.customField with id of novajusIdCustomField with newCustomField
         let customFields = folderData.data.customFields;
         let index = customFields.findIndex(x => x.id === novajusIdCustomFieldId);
@@ -287,7 +307,7 @@ async function updateFolderNovajusIdCustomField(citedLitigation) {
         let config = {
             method: 'put',
             headers: {
-                Authorization: 'Bearer ' + token
+                Authorization: 'Bearer ' + wrikeToken
             }
         }
         let url = `https://www.wrike.com/api/v4/folders/${folderId}?customFields=${JSON.stringify(customFields)}`
@@ -305,19 +325,25 @@ async function updateFolderNovajusIdCustomField(citedLitigation) {
                 return {"success": false, "message": `Erro ao atualizar o Novajus Id da pasta ${folderData.title}.`};
             }
         } catch (error) {
-            return {"success": false, "message": `Erro ao atualizar o Novajus Id da pasta ${folderData.title}. Erro: ${error}`};
+            return {
+                "success": false,
+                "message": `Erro ao atualizar o Novajus Id da pasta ${folderData.title}. Erro: ${error}`
+            };
         }
-        return {"success": false, "message": `Erro ao atualizar o Novajus Id da pasta id ${folderId}. Erro: ${folderData.message}`};
+        return {
+            "success": false,
+            "message": `Erro ao atualizar o Novajus Id da pasta id ${folderId}. Erro: ${folderData.message}`
+        };
     }
 }
 
-async function updateTaskParentFolder(citedLitigation, ) {
+async function updateTaskParentFolder(citedLitigation,) {
     let folderTitle = citedLitigation.folderTitle
     try {
         let folderId = "";
         let response = await searchFolder(folderTitle);
         if (response.success && response.id == null) {
-            response = await createFolder(folderTitle,citedLitigation.novajusId);
+            response = await createFolder(folderTitle, citedLitigation.novajusId);
             if (response.success) {
                 folderId = response.id;
                 citedLitigation.wrikeFolderId = folderId;

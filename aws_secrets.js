@@ -20,7 +20,9 @@ async function getSecret(params) {
         const data = await client.send(new GetSecretValueCommand(params));
         return JSON.parse(data.SecretString)
     } catch (error) {
-        return error
+        console.log('Error getting Secret: ' + error)
+        // return empty object
+        return null
     }
 }
 

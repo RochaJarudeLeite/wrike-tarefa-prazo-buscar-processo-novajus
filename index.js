@@ -1,5 +1,5 @@
 import * as LO from './LegalOneService.js';
-import {GetLegalOneTokenExpirationDate} from './LegalOneAuth.js'
+import {legalOneTokenPromiseCheck} from './LegalOneAuth.js'
 import * as Wrike from './WrikeService.js';
 import * as v from 'validate-cnj'
 
@@ -19,7 +19,6 @@ export async function handler(event) {
         };
         return response;
     }
-    let LOTokenMethod = GetLegalOneTokenExpirationDate();
     let taskId = messageJson[0].taskId;
     let response = await Wrike.getTask(taskId);
     if (!response.success) {
@@ -77,7 +76,7 @@ export async function handler(event) {
         citedLitigations.push(cl);
     }
     let validCitedLitigations = citedLitigations.filter(cl => cl.isValid);
-    await Promise.resolve(LOTokenMethod);
+    await legalOneTokenPromiseCheck();
     response = await LO.batchGetLitigationsByQuery(validCitedLitigations);
     // replace citedLitigations with the same citedLitigaiton.litigation on validCitedLitigations
     citedLitigations = citedLitigations.map(cl => {

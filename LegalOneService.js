@@ -1,4 +1,4 @@
-import {getLegalOneToken} from './LegalOneAuth.js'
+import {legalOneToken} from './LegalOneAuth.js'
 import fetch from 'node-fetch'
 import fs from 'fs'
 import * as v from 'validate-cnj'
@@ -51,14 +51,12 @@ async function getLitigationsByCNJOrFolder(
     citedLitigation,
     value,
     filter,
-    retry = 0,
-    forceToken = false
+    retry = 0
 ) {
-    let token = await getLegalOneToken(forceToken)
     let config = {
         method: 'get',
         headers: {
-            Authorization: 'Bearer ' + token
+            Authorization: 'Bearer ' + legalOneToken
         }
     }
     let odataFilter = `${filter} eq \'${value}\'`
@@ -71,8 +69,7 @@ async function getLitigationsByCNJOrFolder(
                         citedLitigation,
                         value,
                         filter,
-                        retry + 1,
-                        (forceToken = true)
+                        retry + 1
                     )
                 }
             }
@@ -121,8 +118,7 @@ async function getLitigationsByCNJOrFolder(
                         litigationData.map(async (litigation) => {
                             litigation.participants = litigation.participants
                                 ? (litigation.participants = await getLawsuitParticipants(
-                                    litigation.participants,
-                                    token
+                                    litigation.participants
                                 ))
                                 : []
                         })
@@ -156,8 +152,7 @@ async function getLitigationsByCNJOrFolder(
                 return getLitigationsByCNJOrFolder(
                     value,
                     filter,
-                    retry + 1,
-                    (forceToken = true)
+                    retry + 1
                 )
             }
         } else {
@@ -229,17 +224,13 @@ async function createLitigationHTMLBlock(litigationData) {
 // Get Lawsuit Participants
 async function getLawsuitParticipants(
     lawsuitParticipants,
-    token = null,
     retry = 3
 ) {
     if (lawsuitParticipants.length > 0) {
-        if (token == null) {
-            token = await getLegalOneToken()
-        }
         let config = {
             method: 'get',
             headers: {
-                Authorization: 'Bearer ' + token
+                Authorization: 'Bearer ' + legalOneToken
             }
         }
         let participantsInfo = []
@@ -256,7 +247,6 @@ async function getLawsuitParticipants(
                                     if (retry < 3) {
                                         return getLawsuitParticipants(
                                             lawsuitParticipants,
-                                            token,
                                             retry + 1
                                         )
                                     }
@@ -286,16 +276,13 @@ async function getLawsuitParticipants(
 }
 
 //Get Action Type
-async function getActionType(actionTypeId, token = null, retry = 3) {
+async function getActionType(actionTypeId, retry = 3) {
     if (actionTypeId != null) {
         try {
-            if (token == null) {
-                token = await getLegalOneToken()
-            }
             let config = {
                 method: 'get',
                 headers: {
-                    Authorization: 'Bearer ' + token
+                    Authorization: 'Bearer ' + legalOneToken
                 }
             }
             const response = await fetch(
@@ -304,7 +291,7 @@ async function getActionType(actionTypeId, token = null, retry = 3) {
             ).then((response) => {
                 if (!response.ok) {
                     if (retry < 3) {
-                        return getActionType(actionTypeId, token, retry + 1)
+                        return getActionType(actionTypeId, retry + 1)
                     }
                 }
                 return response
@@ -320,16 +307,13 @@ async function getActionType(actionTypeId, token = null, retry = 3) {
 }
 
 //Get State
-async function getState(stateId, token = null, retry = 3) {
+async function getState(stateId, retry = 3) {
     if (stateId != null) {
         try {
-            if (token == null) {
-                token = await getLegalOneToken()
-            }
             let config = {
                 method: 'get',
                 headers: {
-                    Authorization: 'Bearer ' + token
+                    Authorization: 'Bearer ' + legalOneToken
                 }
             }
             const response = await fetch(
@@ -338,7 +322,7 @@ async function getState(stateId, token = null, retry = 3) {
             ).then((response) => {
                 if (!response.ok) {
                     if (retry < 3) {
-                        return getState(stateId, token, retry + 1)
+                        return getState(stateId, retry + 1)
                     }
                 }
                 return response
@@ -354,16 +338,13 @@ async function getState(stateId, token = null, retry = 3) {
 }
 
 //Get the latest three Litigation Updates
-async function getTheLatestThreeLitigationUpdates(litigationId, token = null, retry = 3) {
+async function getTheLatestThreeLitigationUpdates(litigationId, retry = 3) {
     if (litigationId != null) {
         try {
-            if (token == null) {
-                token = await getLegalOneToken()
-            }
             let config = {
                 method: 'get',
                 headers: {
-                    Authorization: 'Bearer ' + token
+                    Authorization: 'Bearer ' + legalOneToken
                 }
             }
             const response = await fetch(
@@ -372,7 +353,7 @@ async function getTheLatestThreeLitigationUpdates(litigationId, token = null, re
             ).then((response) => {
                 if (!response.status !== 200) {
                     if (retry < 3) {
-                        return getTheLatestThreeLitigationUpdates(litigationId, token, retry + 1)
+                        return getTheLatestThreeLitigationUpdates(litigationId, retry + 1)
                     }
                 }
                 return response
@@ -389,7 +370,7 @@ async function getTheLatestThreeLitigationUpdates(litigationId, token = null, re
 }
 
 
-async function createLitigationsUpdateHTMLBlock(litigationsUpdates){
+async function createLitigationsUpdateHTMLBlock(litigationsUpdates) {
     if (litigationsUpdates.length > 0) {
         let htmlBlock = []
         htmlBlock.push("<ul>")
@@ -400,26 +381,6 @@ async function createLitigationsUpdateHTMLBlock(litigationsUpdates){
         return htmlBlock
     } else {
         return []
-    }
-}
-
-async function getLawsuitRemainingData(lawsuitData, token = null) {
-    try {
-        let methods = [
-            (lawsuitData.state = await getState(lawsuitData.stateId, token)),
-            (lawsuitData.city = await getCity(lawsuitData.cityId, token)),
-            (lawsuitData.actionType = await getActionType(
-                lawsuitData.actionTypeId,
-                token
-            ))
-        ]
-        let results = async () => {
-            return Promise.all(methods)
-        }
-        await Promise.resolve(results())
-        return lawsuitData
-    } catch (error) {
-        return {success: false, content: 'Erro: ' + error}
     }
 }
 
@@ -472,7 +433,6 @@ async function batchGetLitigationsByQuery(citedLitigations) {
 export {
     getLitigationsByQuery,
     getLawsuitParticipants,
-    getLawsuitRemainingData,
     saveLawsuitData,
     savePayloadData,
     checkQueryType,

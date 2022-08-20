@@ -1,15 +1,10 @@
 import {GetSecretValueCommand, SecretsManagerClient, UpdateSecretCommand} from '@aws-sdk/client-secrets-manager'
-// Set the AWS Region.
+
 const REGION = 'sa-east-1'
-//Set the Secrets Manager Service Object
 const secretsClient = new SecretsManagerClient({region: REGION})
 
 const client = new SecretsManagerClient({
     region: REGION,
-    // credentials: {
-    //   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    //   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    // }
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 })

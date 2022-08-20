@@ -1,21 +1,14 @@
-import {GetWrikeToken} from './WrikeAuth.js'
+import {wrikeToken} from './WrikeAuth.js'
 import FormData from 'form-data';
 import fetch from 'node-fetch'
 import axios from "axios";
 
-let wrikeToken;
-let wrikeTokenPromise = GetWrikeToken();
+
 let tempLitigationFolderId = "IEABJD3YI44HKA7O";
 let novajusIdCustomFieldId = "IEABJD3YJUADBUZU";
 
-async function wrikeTokenPromiseCheck() {
-    if (wrikeToken == null) {
-        wrikeToken = await wrikeTokenPromise;
-    }
-}
 
 async function getTask(taskId) {
-    await wrikeTokenPromiseCheck()
     let config = {
         method: 'get',
         headers: {

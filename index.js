@@ -1,5 +1,6 @@
 import * as LO from './LegalOneService.js';
-import {legalOneTokenPromiseCheck} from './LegalOneAuth.js'
+import {GetLegalOneToken} from './LegalOneAuth.js'
+import {GetWrikeToken} from './WrikeAuth.js'
 import * as Wrike from './WrikeService.js';
 import * as v from 'validate-cnj'
 
@@ -19,6 +20,15 @@ export async function handler(event) {
         };
         return response;
     }
+    let wrikeToken = await GetWrikeToken();
+    if (wrikeToken == null) {
+        console.log("No Wrike Token found");
+        let response = {
+            statusCode: 200,
+            body: JSON.stringify('No Wrike Token found'),
+        };
+        return response;
+    }
     let taskId = messageJson[0].taskId;
     let response = await Wrike.getTask(taskId);
     if (!response.success) {
@@ -27,7 +37,13 @@ export async function handler(event) {
         if (!response.success) {
             console.log(response.message);
         }
+        let response = {
+            statusCode: 200,
+            body: JSON.stringify('No Wrike Token found'),
+        };
+        return response;
     }
+    let legalOneTokePromise = GetLegalOneToken();
     let wrikeTask = response.wrikeTask;
     let matches = regexDescriptionInfo.exec(wrikeTask.description);
     if (matches == null) {
@@ -76,7 +92,19 @@ export async function handler(event) {
         citedLitigations.push(cl);
     }
     let validCitedLitigations = citedLitigations.filter(cl => cl.isValid);
-    await legalOneTokenPromiseCheck();
+    let legalOneToken = await legalOneTokePromise;
+    if (legalOneToken == null) {
+        let comment = `Automação falou ao obter o token do Novajus. Erro: ${response.message}`;
+        response = await Wrike.createTaskComment(taskId, comment, true);
+        if (!response.success) {
+            console.log(response.message);
+        }
+        let response = {
+            statusCode: 200,
+            body: JSON.stringify('No Legal One Token found'),
+        };
+        return response;
+    }
     response = await LO.batchGetLitigationsByQuery(validCitedLitigations);
     // replace citedLitigations with the same citedLitigaiton.litigation on validCitedLitigations
     citedLitigations = citedLitigations.map(cl => {

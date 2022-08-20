@@ -4,15 +4,20 @@ let params = {
     SecretId: 'prod/wrike'
 }
 
-let wrikeToken;
+let wrikeToken = null;
 
 async function GetToken(forced = false) {
     if (wrikeToken == null) {
         let secretString = await getSecret(params)
         let token = secretString.wrikeKey
-        wrikeToken = token;
+        if (token != null) {
+            wrikeToken = token;
+        }
     }
     return wrikeToken
 }
 
-export {GetToken as GetWrikeToken}
+export {
+    GetToken as GetWrikeToken,
+    wrikeToken
+}

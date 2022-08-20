@@ -1,14 +1,7 @@
 import fetch from 'node-fetch';
 import {getSecret} from './aws_secrets.js';
 
-let legalOneToken = getToken();
-
-async function legalOneTokenPromiseCheck() {
-    if (legalOneToken == null) {
-        legalOneToken = await legalOneToken;
-    }
-}
-
+let legalOneToken = null;
 
 async function GetLegalOneSecret() {
     let secretParams = {
@@ -25,32 +18,36 @@ async function GetLegalOneSecret() {
     }
 }
 
-async function getToken(forceToken = false, retry = 3) {
-    let basicAuth = await GetLegalOneSecret();
-    if (basicAuth == null) {
-        return null;
-    }
-    let config = {
-        method: 'get', headers: {
-            'Authorization': 'Basic ' + basicAuth
+async function getToken(retry = 3) {
+    if (legalOneToken == null) {
+        let basicAuth = await GetLegalOneSecret();
+        if (basicAuth == null) {
+            return null;
         }
-    }
-    const response = await fetch('https://api.thomsonreuters.com/legalone/oauth?grant_type=client_credentials', config).then((response) => {
-        if (!response.ok) {
-            if (retry < 3) {
-                return getToken(
-                    retry + 1
-                )
+        let config = {
+            method: 'get', headers: {
+                'Authorization': 'Basic ' + basicAuth
             }
         }
-        return response
-    });
-    let body = await response.json();
-    legalOneToken = body.access_token;
+        const response = await fetch('https://api.thomsonreuters.com/legalone/oauth?grant_type=client_credentials', config).then((response) => {
+            if (!response.ok) {
+                if (retry < 3) {
+                    return getToken(
+                        retry + 1
+                    )
+                }
+            }
+            return response
+        });
+        if (response.status === 200) {
+            let body = await response.json();
+            legalOneToken = body.access_token;
+        }
+    }
     return legalOneToken;
 }
 
 export {
-    legalOneTokenPromiseCheck,
+    getToken as GetLegalOneToken,
     legalOneToken
 }

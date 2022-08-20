@@ -99,6 +99,37 @@ async function updateTaskDescription(taskId, newDescription) {
     }
 }
 
+async function addTaksParentsAxios(taskId, parentId) {
+    // form data payload
+    let formData = new FormData();
+    formData.append('addParents', JSON.stringify([`${parentId}`]));
+    let config = {
+        method: 'put',
+        headers: {
+            Authorization: 'Bearer ' + wrikeToken,
+            ...formData.getHeaders()
+        },
+        data: formData
+    }
+    let url = `https://www.wrike.com/api/v4/tasks/${taskId}`
+    try {
+        const response = await axios(url, config).then((response) => {
+            return response
+        })
+        if (response.status === 200) {
+            let body = response.data;
+            let data = body.data;
+            if (data.length > 0) {
+                return {"success": true};
+            }
+        } else {
+            return {"success": false, "message": "Erro ao atualizar a descrição da tarefa."};
+        }
+    } catch (error) {
+        return {"success": false, "message": "Erro ao atualizar a descrição da tarefa: " + error};
+    }
+}
+
 async function updateFolderDescription(citedLitigation, newDescription) {
     let folderId = citedLitigation.wrikeFolderId;
     // form data payload

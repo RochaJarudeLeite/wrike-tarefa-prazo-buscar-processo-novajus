@@ -1,6 +1,5 @@
 import {legalOneToken} from './LegalOneAuth.js'
 import fetch from 'node-fetch'
-import fs from 'fs'
 import * as v from 'validate-cnj'
 import {updateTaskParentFolder} from "./WrikeService.js";
 
@@ -275,68 +274,6 @@ async function getLawsuitParticipants(
     }
 }
 
-//Get Action Type
-async function getActionType(actionTypeId, retry = 3) {
-    if (actionTypeId != null) {
-        try {
-            let config = {
-                method: 'get',
-                headers: {
-                    Authorization: 'Bearer ' + legalOneToken
-                }
-            }
-            const response = await fetch(
-                `https://api.thomsonreuters.com/legalone/v1/api/rest/LitigationActionAppealProceduralIssueTypes/${actionTypeId}`,
-                config
-            ).then((response) => {
-                if (!response.ok) {
-                    if (retry < 3) {
-                        return getActionType(actionTypeId, retry + 1)
-                    }
-                }
-                return response
-            })
-            let body = await response.json()
-            return body.name
-        } catch (error) {
-            ;('❌')
-        }
-    } else {
-        return 'Não Indicado'
-    }
-}
-
-//Get State
-async function getState(stateId, retry = 3) {
-    if (stateId != null) {
-        try {
-            let config = {
-                method: 'get',
-                headers: {
-                    Authorization: 'Bearer ' + legalOneToken
-                }
-            }
-            const response = await fetch(
-                `https://api.thomsonreuters.com/legalone/v1/api/rest/States/${stateId}`,
-                config
-            ).then((response) => {
-                if (!response.ok) {
-                    if (retry < 3) {
-                        return getState(stateId, retry + 1)
-                    }
-                }
-                return response
-            })
-            let body = await response.json()
-            return body.name
-        } catch (error) {
-            ;('❌')
-        }
-    } else {
-        return 'Não Indicado'
-    }
-}
-
 //Get the latest three Litigation Updates
 async function getTheLatestThreeLitigationUpdates(litigationId, retry = 3) {
     if (litigationId != null) {
@@ -369,35 +306,19 @@ async function getTheLatestThreeLitigationUpdates(litigationId, retry = 3) {
     }
 }
 
-
 async function createLitigationsUpdateHTMLBlock(litigationsUpdates) {
     if (litigationsUpdates.length > 0) {
         let htmlBlock = []
         htmlBlock.push("<ul>")
         litigationsUpdates.forEach(update => {
-            htmlBlock.push(`<li>${update.description}</li>`)
+            let creationDate = moment(update.creationDate).format('L, H:mm:ss')
+            htmlBlock.push(`<li>${creationDate} - ${update.description}</li>`)
         })
         htmlBlock.push("</ul>")
         return htmlBlock
     } else {
         return []
     }
-}
-
-async function savePayloadData(payload) {
-    const jsonPayload = JSON.stringify(payload)
-    let payloadFile = `payloadData.json`
-    fs.writeFile(payloadFile, jsonPayload, function (err) {
-        if (err) return console.log(err)
-    })
-}
-
-async function saveLawsuitData(lawsuitData) {
-    const jsonLawsuitData = JSON.stringify(lawsuitData)
-    let lawsuitDataFile = `lawsuitData.json`
-    fs.writeFile(lawsuitDataFile, jsonLawsuitData, function (err) {
-        if (err) return console.log(err)
-    })
 }
 
 async function checkQueryType(query) {
@@ -438,8 +359,6 @@ async function batchGetLitigationsByQuery(citedLitigations) {
 export {
     getLitigationsByQuery,
     getLawsuitParticipants,
-    saveLawsuitData,
-    savePayloadData,
     checkQueryType,
     createLitigationHTMLBlock,
     batchGetLitigationsByQuery

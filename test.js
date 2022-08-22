@@ -1,5 +1,3 @@
-import fs from "fs";
-import * as index from "./index.js";
 import {GetWrikeToken} from './WrikeAuth.js';
 import * as Wrike from './WrikeService.js';
 

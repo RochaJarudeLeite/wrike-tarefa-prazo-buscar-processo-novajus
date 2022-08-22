@@ -408,7 +408,12 @@ async function checkQueryType(query) {
         let cnj = query.match(reCNJ).groups['cnj']
         let validate
         validate = v.Validate.load(cnj)
-        return {type: 'identifierNumber', value: validate.generate()}
+        try {
+            validate = v.Validate.load(cnj);
+            return {type: 'identifierNumber', value: validate.generate()}
+        } catch (error) {
+            return {type: 'invalid', value: {queryType: 'invalid', value: query}}
+        }
     } else {
         return {type: 'invalid', value: {queryType: 'invalid', value: query}}
     }

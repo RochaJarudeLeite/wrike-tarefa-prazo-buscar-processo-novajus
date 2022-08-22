@@ -3,10 +3,8 @@ import FormData from 'form-data';
 import fetch from 'node-fetch'
 import axios from "axios";
 
-
 const tempLitigationFolderId = "IEABJD3YI44HKA7O";
 const novajusIdCustomFieldId = "IEABJD3YJUADBUZU";
-
 
 async function getTask(taskId) {
     let config = {
@@ -72,37 +70,6 @@ async function updateTaskDescription(taskId, newDescription) {
     // form data payload
     let formData = new FormData();
     formData.append('description', newDescription);
-    let config = {
-        method: 'put',
-        headers: {
-            Authorization: 'Bearer ' + wrikeToken,
-            ...formData.getHeaders()
-        },
-        data: formData
-    }
-    let url = `https://www.wrike.com/api/v4/tasks/${taskId}`
-    try {
-        const response = await axios(url, config).then((response) => {
-            return response
-        })
-        if (response.status === 200) {
-            let body = response.data;
-            let data = body.data;
-            if (data.length > 0) {
-                return {"success": true};
-            }
-        } else {
-            return {"success": false, "message": "Erro ao atualizar a descrição da tarefa."};
-        }
-    } catch (error) {
-        return {"success": false, "message": "Erro ao atualizar a descrição da tarefa: " + error};
-    }
-}
-
-async function addTaksParentsAxios(taskId, parentId) {
-    // form data payload
-    let formData = new FormData();
-    formData.append('addParents', JSON.stringify([`${parentId}`]));
     let config = {
         method: 'put',
         headers: {

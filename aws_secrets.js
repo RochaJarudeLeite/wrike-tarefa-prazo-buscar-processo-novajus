@@ -1,4 +1,4 @@
-import {GetSecretValueCommand, SecretsManagerClient, UpdateSecretCommand} from '@aws-sdk/client-secrets-manager'
+import {GetSecretValueCommand, SecretsManagerClient} from '@aws-sdk/client-secrets-manager'
 
 const REGION = 'sa-east-1'
 
@@ -14,7 +14,6 @@ async function getSecret(params) {
         return JSON.parse(data.SecretString)
     } catch (error) {
         console.log('Error getting Secret: ' + error)
-        // return empty object
         return null
     }
 }

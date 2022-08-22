@@ -4,8 +4,8 @@ import fetch from 'node-fetch'
 import axios from "axios";
 
 
-let tempLitigationFolderId = "IEABJD3YI44HKA7O";
-let novajusIdCustomFieldId = "IEABJD3YJUADBUZU";
+const tempLitigationFolderId = "IEABJD3YI44HKA7O";
+const novajusIdCustomFieldId = "IEABJD3YJUADBUZU";
 
 
 async function getTask(taskId) {
@@ -320,14 +320,8 @@ async function updateFolderNovajusIdCustomField(citedLitigation) {
     let folderData = await GetFolder(citedLitigation);
     if (folderData.success) {
         let newCustomField = {"id": novajusIdCustomFieldId, "value": `${novajusId}`};
-        // replace folderData.customField with id of novajusIdCustomField with newCustomField
-        let customFields = folderData.data.customFields;
-        let index = customFields.findIndex(x => x.id === novajusIdCustomFieldId);
-        if (index > -1) {
-            customFields[index] = newCustomField;
-        } else {
-            customFields.push(newCustomField);
-        }
+        let customFields = [];
+        customFields.push(newCustomField);
         let config = {
             method: 'put',
             headers: {

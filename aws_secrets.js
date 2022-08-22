@@ -19,12 +19,4 @@ async function getSecret(params) {
     }
 }
 
-async function setSecret(params) {
-    try {
-        const data = await client.send(new UpdateSecretCommand(params));
-    } catch (error) {
-        return error
-    }
-}
-
-export {getSecret, setSecret}
+export {getSecret}

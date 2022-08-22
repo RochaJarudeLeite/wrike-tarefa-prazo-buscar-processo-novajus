@@ -4,6 +4,7 @@ import * as v from 'validate-cnj'
 import {updateTaskParentFolder} from "./WrikeService.js";
 import moment from "moment";
 
+moment.locale('pt-br');
 const reCNJ = /(?<cnj>\d{7}-\d{2}.\d{4}.\d.\d{2}.\d{4}|.*?\d{20})(?<grau>\s[\d\w]+)?/
 const reProcFolder = /(?<folder>Proc-\d{7}\/\d+|Proc-\d{7})/
 

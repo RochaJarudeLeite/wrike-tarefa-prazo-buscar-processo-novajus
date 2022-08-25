@@ -85,7 +85,7 @@ async function updateTaskDescription(taskId, newDescription) {
         })
         if (response.status === 200) {
             let body = response.data;
-            let data = body.data;
+            let { data } = body;
             if (data.length > 0) {
                 return {"success": true};
             }

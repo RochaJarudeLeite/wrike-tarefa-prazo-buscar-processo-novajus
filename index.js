@@ -35,7 +35,7 @@ export async function handler(event) {
   let taskId = messageJson[0].taskId;
   let response = await Wrike.getTask(taskId);
   if (!response.success) {
-    let comment = `🤖 RJL-Bot: Não foi possível obter os dados da tarefa para rodar a automação. Erro: ${response.message}`;
+    let comment = `🤖: Não foi possível obter os dados da tarefa para rodar a automação. Erro: ${response.message}`;
     response = await Wrike.createTaskComment(taskId, comment, true);
     if (!response.success) {
       console.log(response.message);
@@ -100,7 +100,7 @@ export async function handler(event) {
   let validCitedLitigations = citedLitigations.filter((cl) => cl.isValid);
   let legalOneToken = await legalOneTokePromise;
   if (legalOneToken == null) {
-    let comment = `🤖 RJL-Bot: Automação falou ao obter o token do Novajus. Erro: ${response.message}`;
+    let comment = `🤖: Automação falou ao obter o token do Novajus. Erro: ${response.message}`;
     response = await Wrike.createTaskComment(taskId, comment, true);
     if (!response.success) {
       console.log(response.message);
@@ -162,7 +162,7 @@ export async function handler(event) {
 
   //Create task comment
   if (newComment !== "") {
-    newComment = "🤖 RJL-Bot: " + newComment;
+    newComment = "🤖: " + newComment;
     methods.push(Wrike.createTaskComment(taskId, newComment, false));
   }
   let newTaskDescription = wrikeTask.description.replace(
@@ -174,7 +174,7 @@ export async function handler(event) {
   if (!response.success) {
     console.log(response.message);
   }
-  let comment = `🤖 RJL-Bot: Descrição atualizada e pasta(s) vinculada(s): ${citedLitigations
+  let comment = `🤖: Descrição atualizada e pasta(s) vinculada(s): ${citedLitigations
     .map((x) => x.folderTitle)
     .join(", ")}.`;
   response = await Wrike.createTaskComment(taskId, comment, false);

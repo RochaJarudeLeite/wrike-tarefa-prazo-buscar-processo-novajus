@@ -5,7 +5,7 @@ import * as Wrike from "./WrikeService.js";
 import * as v from "validate-cnj";
 
 const regexDescriptionInfo =
-  /Processos Relacionados<\/b>(<br \/>)?(<br \/>)?(?<litigations>[0-9P].*?)<br \/><br \/>/;
+  /Processos Relacionados<\/b>(<br \/>)?(<br \/>)?\s+?(?<litigations>[0-9P].*?)<br \/><br \/>/;
 const regexLitigations =
   /(?<cnj>\d{7}-\d{2}.\d{4}.\d.\d{2}.\d{4}|.*?\d{20})|(?<folder>Proc-\d{7}\/\d+|Proc-\d{7})/g;
 
@@ -16,10 +16,11 @@ export async function handler(event) {
   let messageJson = JSON.parse(message);
   console.log(messageJson);
   if (messageJson[0].eventType !== validEventType) {
-    console.log("Skipped");
+    const message = "Skipped - invalid event type: " + messageJson[0].eventType;
+    console.log(message);
     let response = {
       statusCode: 200,
-      body: JSON.stringify("Skipped")
+      body: JSON.stringify(message)
     };
     return response;
   }
@@ -51,10 +52,11 @@ export async function handler(event) {
   console.log(wrikeTask.description);
   let matches = regexDescriptionInfo.exec(wrikeTask.description);
   if (matches == null) {
-    console.log("Skipped");
+    const message = "Skipped - Regex didn't match";
+    console.log(message);
     response = {
       statusCode: 200,
-      body: JSON.stringify("Skipped")
+      body: JSON.stringify(message)
     };
     return response;
   }

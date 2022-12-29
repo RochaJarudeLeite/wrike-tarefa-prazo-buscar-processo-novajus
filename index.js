@@ -5,7 +5,7 @@ import * as Wrike from "./WrikeService.js";
 import * as v from "validate-cnj";
 
 const regexDescriptionInfo =
-  /Processos Relacionados<\/b>(<br \/>)?(<br \/>)?\s+?(?<litigations>[0-9P].*?)<br \/><br \/>/;
+  /Processos Relacionados<\/b>(<br \/>)?(<br \/>)?\s?(?<litigations>[0-9P].*?)<br \/><br \/>/;
 const regexLitigations =
   /(?<cnj>\d{7}-\d{2}.\d{4}.\d.\d{2}.\d{4}|.*?\d{20})|(?<folder>Proc-\d{7}\/\d+|Proc-\d{7})/g;
 
